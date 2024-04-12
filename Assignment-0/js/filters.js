@@ -62,20 +62,19 @@ Filters.brushFilter = function( image, radius, color, vertsString ) {
   // ----------- STUDENT CODE BEGIN ------------
   for (var i = 0; i < centers.length; i++) {
     var center = centers[i]
-
-    // Iterate over all points within the circle's boundary
-    for (var x = Math.round(center.x - radius); x <= Math.round(center.x + radius); x++) {
-      for (var y = Math.round(center.y - radius); y <= Math.round(center.y + radius); y++) {
-
-        var dx = x - center.x
+    
+    // Bounding Box
+    for (var x = center.x - radius; x <= center.x + radius; x++) {
+      for (var y = center.y - radius; y <= center.y + radius; y++) {
+        var dx = x - center.x // the diference between the center point and the points on the circumference
         var dy = y - center.y
-        var distanceSquared = dx * dx + dy * dy
-
-        if (distanceSquared <= radius * radius) {
-          image.setPixel(x, y, color);
+        
+        if ((dx * dx) + (dy * dy) <= (radius * radius)) { // Pythagorean Theorem
+          image.setPixel(x, y, color)
         }
       }
     }
+
   }
   // ----------- STUDENT CODE END ------------
   //Gui.alertOnce ('brushFilter is not implemented yet');
