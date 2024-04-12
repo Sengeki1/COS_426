@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <!-- the next three lines try to discourage browser from keeping page in cache -->
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="-1">
+    <meta http-equiv="cache-control" content="no-store">
+
+    <title> COS426 Assignment 1 &mdash; Image Processing &mdash; Batch</title>
+    <link href="css/style.css" type="text/css" rel="stylesheet"/>
+</head>
+
+<body>
+    <script src="libjs/gif/LZWEncoder.js"></script>
+    <script src="libjs/gif/NeuQuant.js"></script>
+    <script src="libjs/gif/GIFEncoder.js"></script>
+    <script src="libjs/gif/b64.js"></script>
+
+    <script src="libjs/dat.gui.js"> </script>
+
+    <script src="js/image.js"></script>
+    <script src="coursejs/parser.js"></script>
+    <script src="js/filters.js"></script>
+    <script src="js/student.js"> </script>
+
+    <script src="coursejs/guiConfig.js"></script>
+    <script src="coursejs/gui.js"></script>
+    <script>
+        Gui.hidden = true;
+        Gui.batchMode = true;
+    </script>
+    <script src="coursejs/main.js"></script>
+    <script>
+    </script>
+
+    <!-- <script src="js/batch.js"></script> -->
+
+    <div id="main_div">
+        <h1> <div class=assignment>COS426 Assignment 1</div>Image Processing &mdash; Batch Mode</h1>
+        <h2>Switch to: <a href='index.html'>Interactive Editor</a> | <a href='writeup.html'>Writeup</a></h2>
+        <h2 id='student'></h2>
+        <!-- <div id="instructions">To animate: replace one number value with (start,end,step)<br>Example: http://localhost:8000/batch.html?Push%20Image=flower.jpg&Contrast=(-1,1,0.1)</div> -->
+        <div id="error">Error: See Console</div>
+        <div id="loading">processing...</div>
+        <div id="canvas_div" class="image" >
+            <canvas id="canvas"> </canvas>
+        </div>
+        <div id="result_div" class="image" ></div>
+    </div>
+    <div id="alert_div" title="alert"> </div>
+    <div id="alert_div_internal" title="alert"> </div>
+</body>
+</html>
