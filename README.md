@@ -82,23 +82,30 @@ kernel = kernel.map(row => row.map(num => num / sum));
 ```
 To apply the changes in the image we have to iterate over each pixel of the image and perform a convolution operation using the normalized kernel. This involves taking the weighted average of the pixel's neighborhood according to the values in the kernel. 
 ```js
-      // Compute the bounds of the neighborhood
-      var minX = Math.max(0, x - 1)
-      var maxX = Math.min(image.width - 1, x + 1)
-      var minY = Math.max(0, y - 1)
-      var maxY = Math.min(image.height - 1, y + 1)
+  // Compute the bounds of the neighborhood
+  var minX = Math.max(0, x - 1)
+  var maxX = Math.min(image.width - 1, x + 1)
+  var minY = Math.max(0, y - 1)
+  var maxY = Math.min(image.height - 1, y + 1)
 
-      for (var i = minX; i <= maxX; i++) {
-        for (var j = minY; j <= maxY; j++) {
+  for (var i = minX; i <= maxX; i++) {
+    for (var j = minY; j <= maxY; j++) {
 
-          var neighborhoodPixel = image.getPixel(i, j)
-          (...)
-        }
+      var neighborhoodPixel = image.getPixel(i, j)
+      (...)
     }
+  }
 ```
-Firstly we compute the bounds of the neighborhood of each pixel. So if a pixel with position ```(3, 2)```:
-```minX = 2```, since 2 is greater than or equal to 0
-```maxX = 4```, we take the minimum of that result to ensure we dont go beyond the image bounds
-```minY = 1```
-```maxY = 3```
-Next we only have to iterate over the range of the bounds of the neighborhood of that given pixel and compute the weighted average for that its very simple, we multiply the neighbors by the kernel.
+Firstly we compute the bounds of the neighborhood of each pixel. So if a pixel with position ```(3, 2)```.
+
+```minX = 2```, since 2 is greater than or equal to 0.<br>
+```maxX = 4```, we take the minimum of that result to ensure we dont go beyond the image bounds<br>
+```minY = 1```<br>
+```maxY = 3```<br>
+
+Next we only have to iterate over the range of the bounds of the neighborhood of that given pixel and compute the weighted average, for that its very simple, we multiply the neighbors by the kernel and sum up the values.
+```js
+  var neighborhoodPixel = image.getPixel(i, j)
+  var weightedPixel = neighborhoodPixel.multipliedBy(kernel[i - minX][j - minY])
+  accumulator = accumulator.plus(weightedPixel)
+```
