@@ -134,32 +134,39 @@ Filters.customFilter = function( image, value ) {
                 [1, 2, 1]]
 
   var sum = 0
-  kernel.forEach(num => {
-    sum += num
-  }) 
-  kernel = kernel / sum // Normalizing the kernel
+  kernel.forEach(row => {
+    row.forEach(num => {
+      sum += num
+    })
+  })
+  kernel = kernel.map(row => row.map(num => num / sum)); // Normalizing the kernel
+
+  var outputImage = image.copyImg() // Create a copy of the input image for output
 
   for (var x = 0; x < image.width; x++) {
     for (var y = 0; y < image.height; y++) {
+
+      var accumulator = new Pixel(0, 0, 0)
       
       // Compute the bounds of the neighborhood
       var minX = Math.max(0, x - 1)
       var maxX = Math.min(image.width - 1, x + 1)
       var minY = Math.max(0, y - 1)
-      var maxY = Math.min(image.Height - 1, y + 1)
+      var maxY = Math.min(image.height - 1, y + 1)
 
       for (var i = minX; i <= maxX; i++) {
         for (var j = minY; j <= maxY; j++) {
 
-          var neighborhoodPixel = image.getPixel()
-
+          var neighborhoodPixel = image.getPixel(i, j)
+          var weightedPixel = neighborhoodPixel.multipliedBy(kernel[i - minX][j - minY])
+          accumulator = accumulator.plus(weightedPixel)
         }
       }
-
+      outputImage.setPixel(x, y, accumulator)
     }
   }
   // ----------- STUDENT CODE END ------------
   //Gui.alertOnce ('customFilter is not implemented yet');
 
-  return image;
+  return outputImage;
 };
