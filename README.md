@@ -63,3 +63,42 @@ $$alpha(x, y) = 1 -\frac{distance}{\sqrt{(\frac{W}{2})^2 + (\frac{H}{2})^2}}$$
 ```
 
 ### Gaussian Blur
+
+A Gaussian blur is applied by convolving the image with a Gaussian kernel. This kernel is a two-dimensional matrix where the values are calculated using the Gaussian function. The size of the kernel (usually an odd size like 3x3, 5x5, etc.) determines the extent of the blur.
+```js
+ var kernel = [ [1, 2, 1],
+                [2, 4, 2],
+                [1, 2, 1] ]
+```
+Next we need to normalize the kernel so that the blur operation doesn't change the overall brightness of the image.
+```js
+var sum = 0
+kernel.forEach(row => {
+  row.forEach(num => {
+    sum += num
+  })
+})
+kernel = kernel.map(row => row.map(num => num / sum));
+```
+To apply the changes in the image we have to iterate over each pixel of the image and perform a convolution operation using the normalized kernel. This involves taking the weighted average of the pixel's neighborhood according to the values in the kernel. 
+```js
+      // Compute the bounds of the neighborhood
+      var minX = Math.max(0, x - 1)
+      var maxX = Math.min(image.width - 1, x + 1)
+      var minY = Math.max(0, y - 1)
+      var maxY = Math.min(image.height - 1, y + 1)
+
+      for (var i = minX; i <= maxX; i++) {
+        for (var j = minY; j <= maxY; j++) {
+
+          var neighborhoodPixel = image.getPixel(i, j)
+          (...)
+        }
+    }
+```
+Firstly we compute the bounds of the neighborhood of each pixel. So if a pixel with position ```(3, 2)```:
+```minX = 2```, since 2 is greater than or equal to 0
+```maxX = 4```, we take the minimum of that result to ensure we dont go beyond the image bounds
+```minY = 1```
+```maxY = 3```
+Next we only have to iterate over the range of the bounds of the neighborhood of that given pixel and compute the weighted average for that its very simple, we multiply the neighbors by the kernel.
