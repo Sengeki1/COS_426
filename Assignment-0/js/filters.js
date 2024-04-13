@@ -94,9 +94,27 @@ Filters.softBrushFilter = function( image, radius, color, alpha_at_center, verts
   // the opacity decreases linearly along the radius and becomes zero at the edge of the circle
   // radius and color are specified in function arguments.
   // ----------- STUDENT CODE BEGIN ------------
-  // ----------- Our reference solution uses 21 lines of code.
+  for (var i = 0; i < centers.length; i++) {
+    var center = centers[i]
+      
+    for (var x = center.x - radius; x <= center.x + radius; x++) {
+      for (var y = center.y - radius; y <= center.y + radius; y++) {
+        var dx = x - center.x
+        var dy = y - center.y 
+
+        var distance = Math.sqrt((dx * dx) + (dy * dy))
+
+        if (distance < radius) {
+          var Height = radius * 2
+          var Width = radius * 2
+          color.a = alpha_at_center - distance / (Math.sqrt((Width / 2) * (Width / 2) + (Height / 2) * (Height / 2)))
+          image.setPixel(x, y, color)
+        }
+      }
+    }
+  }
   // ----------- STUDENT CODE END ------------
-  Gui.alertOnce ('softBrushFilter is not implemented yet');
+  //Gui.alertOnce ('softBrushFilter is not implemented yet');
 
   return image;
 };
@@ -110,8 +128,38 @@ Filters.customFilter = function( image, value ) {
   // a bunch of different versions of your code if you want to
   // code up a bunch of different things for the art contest.
   // ----------- STUDENT CODE BEGIN ------------
-  // ----------- Our reference solution uses 0 lines of code.
+  // Gaussian Kernel
+  var kernel = [[1, 2, 1],
+                [2, 4, 2],
+                [1, 2, 1]]
+
+  var sum = 0
+  kernel.forEach(num => {
+    sum += num
+  }) 
+  kernel = kernel / sum // Normalizing the kernel
+
+  for (var x = 0; x < image.width; x++) {
+    for (var y = 0; y < image.height; y++) {
+      
+      // Compute the bounds of the neighborhood
+      var minX = Math.max(0, x - 1)
+      var maxX = Math.min(image.width - 1, x + 1)
+      var minY = Math.max(0, y - 1)
+      var maxY = Math.min(image.Height - 1, y + 1)
+
+      for (var i = minX; i <= maxX; i++) {
+        for (var j = minY; j <= maxY; j++) {
+
+          var neighborhoodPixel = image.getPixel()
+
+        }
+      }
+
+    }
+  }
   // ----------- STUDENT CODE END ------------
-  Gui.alertOnce ('customFilter is not implemented yet');
+  //Gui.alertOnce ('customFilter is not implemented yet');
+
   return image;
 };
