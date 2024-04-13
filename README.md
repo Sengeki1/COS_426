@@ -51,8 +51,15 @@ To add opacity is simple. We already know that a pixel is the combination of a c
   color.a = alpha_at_center
   image.setPixel(x, y, color)
 ```
-Now to decrease it linearly along the radius and becomes zero at the edge of the circle, mathematically we calculate the width of the image (number of pixels from left to right) and the height of the image (number of pixels from top to bottom), x be the horizontal position of the pixel (starting from 0 at the left), and
-y be the vertical position of the pixel (starting from 0 at the top).
+Now to decrease it linearly along the radius and becomes zero at the edge of the circle, mathematically we calculate the width of the image (number of pixels from left to right) and the height of the image (number of pixels from top to bottom), ```x``` be the horizontal position of the pixel (starting from 0 at the left), and ```y``` be the vertical position of the pixel (starting from 0 at the top).
 
-First, we find the coordinates of the center of the circle $(W/2, H/2)$. Calculated the distance of each pixel we only have to scale the distance to the ```range[0,1]``` and subtract it from 1 to get the alpha value.
+First, we find the coordinates of the center of the circle $(\frac{W}{2}, \frac{H}{2})$. Calculated the distance of each pixel we only have to scale the distance to the ```range[0,1]``` and subtract it from 1 to get the alpha value.
 $$alpha(x, y) = 1 -\frac{distance}{\sqrt{(\frac{W}{2})^2 + (\frac{H}{2})^2}}$$
+```js
+  var Height = radius * 2
+  var Width = radius * 2
+  color.a = alpha_at_center - distance / (Math.sqrt((Width / 2) * (Width / 2) + (Height / 2) * (Height / 2)))
+  image.setPixel(x, y, color)
+```
+
+### Gaussian Blur
