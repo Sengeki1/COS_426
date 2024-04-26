@@ -1,0 +1,239 @@
+<head>
+    <!-- the next three lines try to discourage browser from keeping page in cache -->
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="-1">
+    <meta http-equiv="cache-control" content="no-store">
+
+    <title> COS426 Assignment 1 &mdash; Image Processing &mdash; Writeup</title>
+    <link href="css/style.css" type="text/css" rel="stylesheet"/>
+</head>
+
+<body>
+    <script src="js/student.js"> </script>
+    <script src="coursejs/writeup.js"> </script>
+    <div class="main_div">
+
+        <h1> <div class=assignment>COS426 Assignment 1</div>Image Processing &mdash; Batch Mode</h1>
+        <h2>Switch to: <a href='index.html'>Interactive Editor</a></h2>
+        <div class='selectable'>
+        <h2 id='student'></h2>
+
+        Features Implemented:
+<ul>
+<li>(0.0) <a href='#Brightness'>Brightness</a></li>
+<li>(0.5) <a href='#Contrast'>Contrast</a></li>
+<li>(0.5) <a href='#Gamma'>Gamma</a></li>
+<li>(0.5) <a href='#Vignette'>Vignette</a></li>
+<li>(2.0) <a href='#Histogram+equalization'>Histogram equalization</a></li>
+<li>(0.5) <a href='#Saturation'>Saturation</a></li>
+<li>(1.5) <a href='#White+balance'>White balance</a></li>
+<li>(2.0) <a href='#Histogram+matching'>Histogram matching</a></li>
+<li>(1.0) <a href='#Gaussian'>Gaussian</a></li>
+<li>(0.5) <a href='#Sharpen'>Sharpen</a></li>
+<li>(0.5) <a href='#Edge+detect'>Edge detect</a></li>
+<li>(1.0) <a href='#Median+filter'>Median filter</a></li>
+<li>(2.0) <a href='#Bilateral+filter'>Bilateral filter</a></li>
+<li>(0.0) <a href='#Quantize'>Quantize</a></li>
+<li>(0.5) <a href='#Random+dither'>Random dither</a></li>
+<li>(1.0) <a href='#Floyd-Steinberg+dither'>Floyd-Steinberg dither</a></li>
+<li>(1.0) <a href='#Ordered+dither'>Ordered dither</a></li>
+<li>(1.0) <a href='#Sampling'>Sampling</a></li>
+<li>(0.5) <a href='#Translate'>Translate</a></li>
+<li>(0.5) <a href='#Scale'>Scale</a></li>
+<li>(1.5) <a href='#Rotate'>Rotate</a></li>
+<li>(1.5) <a href='#Swirl'>Swirl</a></li>
+<li>(1.0) <a href='#Composite'>Composite</a></li>
+<li>(3.0) <a href='#Morph'>Morph</a></li>
+<li>(3.0) <a href='#Palette'>Palette</a></li>
+<li>(4.0) <a href='#Paint-by-numbers'>Paint-by-numbers</a></li>
+<li>(4.0) <a href='#xDoG'>xDoG</a></li>
+<li>(1.0) <a href='#Art+Contest'>Art Contest</a></li>
+        </ul></div>
+
+<p><hr><p><a name='Brightness'></a><h2>Brightness</h2><p><hr><p>
+
+    This feature was implemented by the course staff.
+    I used it as an example of how to loop over the pixels in an image.
+    <p>
+    Here is an example output where the image is made brigher with
+    <a href='batch.html?Push%20Image=flower.jpg&Brightness=0.3'>the
+    luminance slider set to 0.3</a>:
+    <p>
+    <img src='results/luminance0.3.png'>
+    <p>
+    Here is an example output where the image is made darker with
+    <a href='batch.html?Push%20Image=flower.jpg&Brightness=-0.5'>the
+    luminance slider set to -0.5</a>:
+    <p>
+    <img src='results/luminance-0.5.png'>
+    <p>
+    I did not encounter any particular challenges in implementing this.
+
+<br>You can include as many results as you want, but please at least include the following results:<p><hr><p><a name='Contrast'></a><h2>Contrast</h2><p><hr><p>
+(Your description of your implementation of Contrast goes here...)
+
+<br>You can include as many results as you want, but please at least include the following results:<br> <a href='batch.html?Push_Image=leaves.jpg&Contrast=-1'>Push_Image=leaves.jpg&Contrast=-1</a>
+
+<br><img src='results/placeholder.png'><br> <a href='batch.html?Push_Image=leaves.jpg&Contrast=0.7'>Push_Image=leaves.jpg&Contrast=0.7</a>
+
+<br><img src='results/placeholder.png'><br> <a href='batch.html?Push_Image=leaves.jpg&Contrast=-0.8'>Push_Image=leaves.jpg&Contrast=-0.8</a>
+
+<br><img src='results/placeholder.png'><p><hr><p><a name='Gamma'></a><h2>Gamma</h2><p><hr><p>
+(Your description of your implementation of Gamma goes here...)
+
+<br>You can include as many results as you want, but please at least include the following results:<br> <a href='batch.html?Push_Image=mesa.jpg&Gamma=1'>Push_Image=mesa.jpg&Gamma=1</a>
+
+<br><img src='results/placeholder.png'><br> <a href='batch.html?Push_Image=mesa.jpg&Gamma=-1.6'>Push_Image=mesa.jpg&Gamma=-1.6</a>
+
+<br><img src='results/placeholder.png'><p><hr><p><a name='Vignette'></a><h2>Vignette</h2><p><hr><p>
+(Your description of your implementation of Vignette goes here...)
+
+<br>You can include as many results as you want, but please at least include the following results:<br> <a href='batch.html?Push_Image=mesa.jpg&Vignette=0.25;1'>Push_Image=mesa.jpg&Vignette=0.25;1</a>
+
+<br><img src='results/placeholder.png'><br> <a href='batch.html?Push_Image=mesa.jpg&Vignette=0;0.75'>Push_Image=mesa.jpg&Vignette=0;0.75</a>
+
+<br><img src='results/placeholder.png'><p><hr><p><a name='Histogram+equalization'></a><h2>Histogram equalization</h2><p><hr><p>
+(Your description of your implementation of Histogram equalization goes here...)
+
+<br>You can include as many results as you want, but please at least include the following results:<br> <a href='batch.html?Push_Image=flower.jpg&Histogram_Equalization='>Push_Image=flower.jpg&Histogram_Equalization=</a>
+
+<br><img src='results/placeholder.png'><br> <a href='batch.html?Push_Image=leaves.jpg&Histogram_Equalization='>Push_Image=leaves.jpg&Histogram_Equalization=</a>
+
+<br><img src='results/placeholder.png'><p><hr><p><a name='Saturation'></a><h2>Saturation</h2><p><hr><p>
+(Your description of your implementation of Saturation goes here...)
+
+<br>You can include as many results as you want, but please at least include the following results:<br> <a href='batch.html?Push_Image=leaves.jpg&Saturation=1'>Push_Image=leaves.jpg&Saturation=1</a>
+
+<br><img src='results/placeholder.png'><br> <a href='batch.html?Push_Image=leaves.jpg&Saturation=-0.5'>Push_Image=leaves.jpg&Saturation=-0.5</a>
+
+<br><img src='results/placeholder.png'><p><hr><p><a name='White+balance'></a><h2>White balance</h2><p><hr><p>
+(Your description of your implementation of White balance goes here...)
+
+<br>You can include as many results as you want, but please at least include the following results:<br> <a href='batch.html?Push_Image=town.jpg&White_Balance=[0.5,0.5,0.5,1]'>Push_Image=town.jpg&White_Balance=[0.5,0.5,0.5,1]</a>
+
+<br><img src='results/placeholder.png'><p><hr><p><a name='Histogram+matching'></a><h2>Histogram matching</h2><p><hr><p>
+(Your description of your implementation of Histogram matching goes here...)
+
+<br>You can include as many results as you want, but please at least include the following results:<br> <a href='batch.html?Push_Image=leaves.jpg&Push_Image=flower.jpg&Histogram_Match='>Push_Image=leaves.jpg&Push_Image=flower.jpg&Histogram_Match=</a>
+
+<br><img src='results/placeholder.png'><p><hr><p><a name='Gaussian'></a><h2>Gaussian</h2><p><hr><p>
+(Your description of your implementation of Gaussian goes here...)
+
+<br>You can include as many results as you want, but please at least include the following results:<br> <a href='batch.html?Push_Image=leaves.jpg&Gaussian=4'>Push_Image=leaves.jpg&Gaussian=4</a>
+
+<br><img src='results/placeholder.png'><br> <a href='batch.html?Push_Image=man.jpg&Gaussian=7'>Push_Image=man.jpg&Gaussian=7</a>
+
+<br><img src='results/placeholder.png'><p><hr><p><a name='Sharpen'></a><h2>Sharpen</h2><p><hr><p>
+(Your description of your implementation of Sharpen goes here...)
+
+<br>You can include as many results as you want, but please at least include the following results:<br> <a href='batch.html?Push_Image=leaves.jpg&Sharpen='>Push_Image=leaves.jpg&Sharpen=</a>
+
+<br><img src='results/placeholder.png'><br> <a href='batch.html?Push_Image=woman.jpg&Sharpen='>Push_Image=woman.jpg&Sharpen=</a>
+
+<br><img src='results/placeholder.png'><p><hr><p><a name='Edge+detect'></a><h2>Edge detect</h2><p><hr><p>
+(Your description of your implementation of Edge detect goes here...)
+
+<br>You can include as many results as you want, but please at least include the following results:<br> <a href='batch.html?Push_Image=leaves.jpg&Edge='>Push_Image=leaves.jpg&Edge=</a>
+
+<br><img src='results/placeholder.png'><br> <a href='batch.html?Push_Image=woman.jpg&Edge='>Push_Image=woman.jpg&Edge=</a>
+
+<br><img src='results/placeholder.png'><p><hr><p><a name='Median+filter'></a><h2>Median filter</h2><p><hr><p>
+(Your description of your implementation of Median filter goes here...)
+
+<br>You can include as many results as you want, but please at least include the following results:<br> <a href='batch.html?Push_Image=leaves.jpg&Median=3'>Push_Image=leaves.jpg&Median=3</a>
+
+<br><img src='results/placeholder.png'><br> <a href='batch.html?Push_Image=leaves.jpg&Median=5'>Push_Image=leaves.jpg&Median=5</a>
+
+<br><img src='results/placeholder.png'><br> <a href='batch.html?Push_Image=leaves.jpg&Median=8'>Push_Image=leaves.jpg&Median=8</a>
+
+<br><img src='results/placeholder.png'><p><hr><p><a name='Bilateral+filter'></a><h2>Bilateral filter</h2><p><hr><p>
+(Your description of your implementation of Bilateral filter goes here...)
+
+<br>You can include as many results as you want, but please at least include the following results:<br> <a href='batch.html?Push_Image=mesa.jpg&Bilateral=4;2'>Push_Image=mesa.jpg&Bilateral=4;2</a>
+
+<br><img src='results/placeholder.png'><br> <a href='batch.html?Push_Image=mesa.jpg&Bilateral=5;3'>Push_Image=mesa.jpg&Bilateral=5;3</a>
+
+<br><img src='results/placeholder.png'><p><hr><p><a name='Random+dither'></a><h2>Random dither</h2><p><hr><p>
+(Your description of your implementation of Random dither goes here...)
+
+<br>You can include as many results as you want, but please at least include the following results:<br> <a href='batch.html?Push_Image=mesa.jpg&Random='>Push_Image=mesa.jpg&Random=</a>
+
+<br><img src='results/placeholder.png'><p><hr><p><a name='Floyd-Steinberg+dither'></a><h2>Floyd-Steinberg dither</h2><p><hr><p>
+(Your description of your implementation of Floyd-Steinberg dither goes here...)
+
+<br>You can include as many results as you want, but please at least include the following results:<br> <a href='batch.html?Push_Image=mesa.jpg&Floyd-Steinberg='>Push_Image=mesa.jpg&Floyd-Steinberg=</a>
+
+<br><img src='results/placeholder.png'><p><hr><p><a name='Ordered+dither'></a><h2>Ordered dither</h2><p><hr><p>
+(Your description of your implementation of Ordered dither goes here...)
+
+<br>You can include as many results as you want, but please at least include the following results:<br> <a href='batch.html?Push_Image=mesa.jpg&Ordered='>Push_Image=mesa.jpg&Ordered=</a>
+
+<br><img src='results/placeholder.png'><p><hr><p><a name='Sampling'></a><h2>Sampling</h2><p><hr><p>
+(Your description of your implementation of Sampling goes here...)
+
+<br>You can include as many results as you want, but please at least include the following results:<p><hr><p><a name='Translate'></a><h2>Translate</h2><p><hr><p>
+(Your description of your implementation of Translate goes here...)
+
+<br>You can include as many results as you want, but please at least include the following results:<br> <a href='batch.html?Push_Image=flower.jpg&Translate=-317;-182;point'>Push_Image=flower.jpg&Translate=-317;-182;point</a>
+
+<br><img src='results/placeholder.png'><br> <a href='batch.html?Push_Image=flower.jpg&Translate=-317;-182;bilinear'>Push_Image=flower.jpg&Translate=-317;-182;bilinear</a>
+
+<br><img src='results/placeholder.png'><br> <a href='batch.html?Push_Image=flower.jpg&Translate=-317;-182;gaussian'>Push_Image=flower.jpg&Translate=-317;-182;gaussian</a>
+
+<br><img src='results/placeholder.png'><p><hr><p><a name='Scale'></a><h2>Scale</h2><p><hr><p>
+(Your description of your implementation of Scale goes here...)
+
+<br>You can include as many results as you want, but please at least include the following results:<br> <a href='batch.html?Push_Image=mesa.jpg&Scale=2.03;point'>Push_Image=mesa.jpg&Scale=2.03;point</a>
+
+<br><img src='results/placeholder.png'><br> <a href='batch.html?Push_Image=mesa.jpg&Scale=2.03;bilinear'>Push_Image=mesa.jpg&Scale=2.03;bilinear</a>
+
+<br><img src='results/placeholder.png'><br> <a href='batch.html?Push_Image=mesa.jpg&Scale=2.03;gaussian'>Push_Image=mesa.jpg&Scale=2.03;gaussian</a>
+
+<br><img src='results/placeholder.png'><p><hr><p><a name='Rotate'></a><h2>Rotate</h2><p><hr><p>
+(Your description of your implementation of Rotate goes here...)
+
+<br>You can include as many results as you want, but please at least include the following results:<br> <a href='batch.html?Push_Image=mesa.jpg&Rotate=0.628318530718;point'>Push_Image=mesa.jpg&Rotate=0.628318530718;point</a>
+
+<br><img src='results/placeholder.png'><br> <a href='batch.html?Push_Image=mesa.jpg&Rotate=0.628318530718;bilinear'>Push_Image=mesa.jpg&Rotate=0.628318530718;bilinear</a>
+
+<br><img src='results/placeholder.png'><br> <a href='batch.html?Push_Image=mesa.jpg&Rotate=0.628318530718;gaussian'>Push_Image=mesa.jpg&Rotate=0.628318530718;gaussian</a>
+
+<br><img src='results/placeholder.png'><p><hr><p><a name='Swirl'></a><h2>Swirl</h2><p><hr><p>
+(Your description of your implementation of Swirl goes here...)
+
+<br>You can include as many results as you want, but please at least include the following results:<br> <a href='batch.html?Push_Image=mesa.jpg&Swirl=(0,6.28318530718,0.628318530718)'>Push_Image=mesa.jpg&Swirl=(0,6.28318530718,0.628318530718)</a>
+
+<br><img src='results/placeholder.png'><p><hr><p><a name='Composite'></a><h2>Composite</h2><p><hr><p>
+(Your description of your implementation of Composite goes here...)
+
+<br>You can include as many results as you want, but please at least include the following results:<br> <a href='batch.html?Push_Image=man.jpg&Push_Image=doge.jpg&Push_Image=alpha.png&Get_Alpha=&Composite='>Push_Image=man.jpg&Push_Image=doge.jpg&Push_Image=alpha.png&Get_Alpha=&Composite=</a>
+
+<br><img src='results/placeholder.png'><p><hr><p><a name='Morph'></a><h2>Morph</h2><p><hr><p>
+(Your description of your implementation of Morph goes here...)
+
+<br>You can include as many results as you want, but please at least include the following results:<br> <a href='batch.html?Push_Image=chang.jpg&Push_Image=halber.jpg&Morph=(0,1,0.1)'>Push_Image=chang.jpg&Push_Image=halber.jpg&Morph=(0,1,0.1)</a>
+
+<br><img src='results/placeholder.png'><p><hr><p><a name='Palette'></a><h2>Palette</h2><p><hr><p>
+(Your description of your implementation of Palette goes here...)
+
+<br>You can include as many results as you want, but please at least include the following results:<br> <a href='batch.html?Push_Image=leaves.jpg&Palette=3'>Push_Image=leaves.jpg&Palette=3</a>
+
+<br><img src='results/placeholder.png'><p><hr><p><a name='Paint-by-numbers'></a><h2>Paint-by-numbers</h2><p><hr><p>
+(Your description of your implementation of Paint-by-numbers goes here...)
+
+<br>You can include as many results as you want, but please at least include the following results:<br> <a href='batch.html?Push_Image=leaves.jpg&Paint=0.2'>Push_Image=leaves.jpg&Paint=0.2</a>
+
+<br><img src='results/placeholder.png'><p><hr><p><a name='xDoG'></a><h2>xDoG</h2><p><hr><p>
+(Your description of your implementation of xDoG goes here...)
+
+<br>You can include as many results as you want, but please at least include the following results:<br> <a href='batch.html?Push_Image=leaves.jpg&XDoG=0.5'>Push_Image=leaves.jpg&XDoG=0.5</a>
+
+<br><img src='results/placeholder.png'><p><hr><p><a name='Art+Contest'></a><h2>Art Contest</h2><p><hr><p>
+(Your description of your implementation of Art Contest goes here...)
+
+<br>You can include as many results as you want, but please at least include the following results:
+<p><hr><p><a name='Collaboration'></a><h2>Collaboration</h2><p><hr><p>
+                (Please write down who you have collaborated with for this assignment...)
+    </div>
+</body>
+</html>
