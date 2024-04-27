@@ -50,26 +50,26 @@ When we encounter a pixel with a particular lightness value, we increment the co
 
 After computing the histogram, the next step in histogram equalization is to compute the ```Cumulative Distribution Function (CDF)``` based on the histogram. The CDF represents the cumulative probability distribution of the lightness values in the image.
 
-First, we compute the histogram $H(k)$, which counts the frequency of each intensity level $k$ in the image.For example, let's say our histogram is:
+First, we compute the histogram $H(k)$, which counts the frequency of each intensity level $k$ in the image. Diferent from grayscale which its levels range from ```[0, 255]```, hsl range from ```0%``` to ```100%```.For example, let's say our histogram is:
 * $H (0) = 10$
 * $H (1) = 20$
 * $H (2) = 15$
 * ...
-* $H (255) = 5$
+* $H (100) = 5$
   
-Next, we normalize the histogram so that its values represent probabilities. We divide each histogram bin count by the total number of pixels in the image $N_pixels$. Suppose our image has $N_pixels = 1000$ pixels. The normalized histogram would be:
+Next, we normalize the histogram so that its values represent probabilities. We divide each histogram bin count by the total number of pixels in the image $Npixels$. Suppose our image has $Npixels = 1000$ pixels. The normalized histogram would be:
 * $Normalized Histogram (0) = 10/1000 = 0.01$
 * $Normalized Histogram (1) = 20/1000 = 0.02$
 * $Normalized Histogram (2) = 15/1000 = 0.015$
 * ...
-* $Normalized Histogram (255) = 5/1000 = 0.005$
+* $Normalized Histogram (100) = 5/1000 = 0.005$
 
 Finally, we compute the cumulative sum of the normalized histogram values up to each intensity level $k$. This gives us the cumulative distribution function.
 * $CDF (0) = Normalized Histogram(0) = 0.01$
 * $CDF (1) = Normalized Histogram (0) + Normalized Histogram (1) = 0.01 + 0.02 = 0.03$
 * $CDF (2) = Normalized Histogram (0) + Normalized Histogram (1) + Normalized Histogram (2) = 0.01 + 0.02 + 0.0015 = 0.045$
 * ...
-* $CDF (255) = 1$
+* $CDF (100) = 1$
 
 Lastly we map the original intensity values of the image to their corresponding values in the CDF. This mapping redistributes the intensity values to achieve a more uniform distribution. 
 Let $f(x)$ be the histogram equalization function that maps the original intensity value $x$ to their corresponding values in the CDF $CDF(x)$. This function can be fefine as:
