@@ -24,8 +24,8 @@ $$r = \sqrt{(x - x_c)^2 + (y - y_c)^2}$$
 Where $(x_c, y_c)$ are the coordinates of the center of the image. 
 
 Using a Quadratic function we can smoothly transitions from 1 (no effect) at the center to 0 (fully darkened) at the outer radius. 
-We then normalize it to ensure that points are applied properly within the circular region
 
 $$f(r) = 1 - (\frac{r - innerR}{outerR - innerR})^2$$
 
 This function smoothly decreases from ```1``` to ```0``` as ```r``` increases from the inner radius to the outer radius.
+We then normalize it to ensure that points are applied properly within the circular region
