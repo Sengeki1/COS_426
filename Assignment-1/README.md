@@ -47,3 +47,34 @@ The line ```histogram[lightness]++```; increments the count in the histogram arr
 In the histogram array, each index represents a particular lightness value, ranging from ```0``` to ```100```. For example, ```histogram[0]``` represents the count of pixels with a lightness value of ```0```, ```histogram[1]``` represents the count of pixels with a lightness value of ```1```, and so on, up to ```histogram[100]``` for a lightness value of ```100```.
 
 When we encounter a pixel with a particular lightness value, we increment the count in the histogram array at the index corresponding to that lightness value. For example, if we encounter a pixel with a ```lightness value of 50```, we increment ```histogram[50]``` by ```1``` to indicate that we've found ```another pixel with a lightness value of 50```.
+
+After computing the histogram, the next step in histogram equalization is to compute the ```Cumulative Distribution Function (CDF)``` based on the histogram. The CDF represents the cumulative probability distribution of the lightness values in the image.
+
+First, we compute the histogram $H(k)$, which counts the frequency of each intensity level $k$ in the image.For example, let's say our histogram is:
+* $H (0) = 10$
+* $H (1) = 20$
+* $H (2) = 15$
+* ...
+* $H (255) = 5$
+  
+Next, we normalize the histogram so that its values represent probabilities. We divide each histogram bin count by the total number of pixels in the image $N_pixels$. Suppose our image has $N_pixels = 1000$ pixels. The normalized histogram would be:
+* $Normalized Histogram (0) = 10/1000 = 0.01$
+* $Normalized Histogram (1) = 20/1000 = 0.02$
+* $Normalized Histogram (2) = 15/1000 = 0.015$
+* ...
+* $Normalized Histogram (255) = 5/1000 = 0.005$
+
+Finally, we compute the cumulative sum of the normalized histogram values up to each intensity level $k$. This gives us the cumulative distribution function.
+* $CDF (0) = Normalized Histogram(0) = 0.01$
+* $CDF (1) = Normalized Histogram (0) + Normalized Histogram (1) = 0.01 + 0.02 = 0.03$
+* $CDF (2) = Normalized Histogram (0) + Normalized Histogram (1) + Normalized Histogram (2) = 0.01 + 0.02 + 0.0015 = 0.045$
+* ...
+* $CDF (255) = 1$
+
+Lastly we map the original intensity values of the image to their corresponding values in the CDF. This mapping redistributes the intensity values to achieve a more uniform distribution. 
+Let $f(x)$ be the histogram equalization function that maps the original intensity value $x$ to their corresponding values in the CDF $CDF(x)$. This function can be fefine as:
+
+$$f(x) = round(\frac{CDF(x) - min(CDF)}{max(CDF)-min(CDF)} * (L - 1))$$
+
+Once the histogram equalization function is defined, you can update each pixel's intensity value in the image using this function
+
