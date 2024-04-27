@@ -83,16 +83,16 @@ Filters.brushFilter = function(image, radius, color, vertsString) {
         var center = centers[i]
         
         for (var x = center.x - radius; x <= center.x + radius; x++) {
-        for (var y = center.y - radius; y <= center.y + radius; y++) {
-            var dx = x - center.x
-            var dy = y - center.y 
+            for (var y = center.y - radius; y <= center.y + radius; y++) {
+                var dx = x - center.x
+                var dy = y - center.y 
 
-            var d = Math.sqrt((dx * dx) + (dy * dy))
+                var d = Math.sqrt((dx * dx) + (dy * dy))
 
-            if (d < radius) {
-            image.setPixel(x, y, color)
+                if (d < radius) {
+                image.setPixel(x, y, color)
+                }
             }
-        }
         }
     }
     // ----------- STUDENT CODE END ------------
@@ -179,7 +179,7 @@ Filters.contrastFilter = function(image, ratio) {
         ajustedValue = (ajustedValue - 0.5) * Math.tan((ratio + 1) * Math.PI/4) + 0.5
 
         return ajustedValue
-    }
+        }
 
     for (let x = 0; x < image.width; x++) {
         for (let y = 0; y < image.height; y++) {
@@ -250,9 +250,9 @@ Filters.vignetteFilter = function(image, innerR, outerR) {
 
             let distance = Math.sqrt(((x - x_c) * (x - x_c)) + ((y - y_c) * (y - y_c)))
 
-            pixel.data[0] *= gauss(distance, 100000)
-            pixel.data[1] *= gauss(distance, 100000)
-            pixel.data[2] *= gauss(distance, 100000)
+            pixel.data[0] *= gauss(distance, 1000)
+            pixel.data[1] *= gauss(distance, 1000)
+            pixel.data[2] *= gauss(distance, 1000)
 
             image.setPixel(x, y, pixel)
         }
@@ -267,9 +267,47 @@ Filters.vignetteFilter = function(image, innerR, outerR) {
 */
 Filters.histogramEqualizationFilter = function(image) {
     // ----------- STUDENT CODE BEGIN ------------
-    // ----------- Our reference solution uses 33 lines of code.
+    let n_bins = 100
+    let total_pixels = image.width * image.height
+    let histogram = new Array(n_bins).fill(0)
+
+    for (let x = 0; x < image.width; x++) {
+        for (let y = 0; y < image.height; y++) {
+            let pixel = image.getPixel(x, y).rgbToHsl()
+            let lightness = Math.round(pixel.data[2] * 100) // Scale lightness to [0, 100]
+
+            histogram[lightness]++
+        }
+    }
+
+    for (let x = 0; x < histogram.length - 1; x++) {
+        let normalized = histogram[x] / total_pixels
+        histogram[x] = normalized
+    }
+
+    let cdf = []
+    let sum = 0
+    for (let x = 0; x < histogram.length - 1; x++) {
+        sum += histogram[x]
+        cdf.push(sum)
+    }
+
+    for (let x = 0; x < image.width; x++) {
+        for (let y = 0; y < image.height; y++) {
+            let pixel = image.getPixel(x, y).rgbToHsl()
+
+            let lightness = Math.round(pixel.data[2] * 100)
+            let equalized_lightness = Math.round((cdf[lightness] - cdf[0]) / (1 - cdf[0]) * 100)
+
+            pixel.data[2] = equalized_lightness / 100
+
+            let new_pixel = pixel.hslToRgb()
+            image.setPixel(x, y, new_pixel)
+        }
+    }
+
     // ----------- STUDENT CODE END ------------
-    Gui.alertOnce ('histogramEqualizationFilter is not implemented yet');
+    //Gui.alertOnce ('histogramEqualizationFilter is not implemented yet');
     return image;
 };
 
@@ -295,9 +333,38 @@ Filters.grayscaleFilter = function(image) {
 // See: http://www.graficaobscura.com/interp/index.html
 Filters.saturationFilter = function(image, ratio) {
     // ----------- STUDENT CODE BEGIN ------------
-    // ----------- Our reference solution uses 13 lines of code.
+
+    function grayscale (pixel) {
+        const luminance = 0.2126 * pixel.data[0] + 0.7152 * pixel.data[1] + 0.0722 * pixel.data[2];
+        pixel.data[0] = luminance;
+        pixel.data[1] = luminance;
+        pixel.data[2] = luminance;
+        
+        return pixel
+    }
+
+    function computeSaturation(saturation_n, saturation_g) {
+        let alpha = ratio + 1
+        return (1 - alpha) * saturation_g + alpha * saturation_n
+    }
+
+    for (let x = 0; x < image.width; x++) {
+        for (let y = 0; y < image.height; y++) {
+            let pixel = image.getPixel(x, y) // get the pixel from the original image
+            let pixel_n = pixel.rgbToHsl() // transform the pixels to hsl 
+            let saturation_n = pixel_n.data[1] 
+
+            let pixel_g = grayscale(pixel)
+            let saturation_g = pixel_g.data[0]
+
+            pixel_n.data[1] *= computeSaturation(saturation_n, saturation_g)
+
+            let new_pixel = pixel_n.hslToRgb()
+            image.setPixel(x, y, new_pixel)
+        }
+    }
     // ----------- STUDENT CODE END ------------
-    Gui.alertOnce ('saturationFilter is not implemented yet');
+    //Gui.alertOnce ('saturationFilter is not implemented yet');
     return image;
 };
 
