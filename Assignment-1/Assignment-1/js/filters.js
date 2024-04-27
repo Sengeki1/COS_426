@@ -174,7 +174,7 @@ Filters.contrastFilter = function(image, ratio) {
         if (ratio < 0.0)  {
             ajustedValue = value * ( 1.0 + ratio)
         } else {
-            ajustedValue = value + ((1 - value) * ratio);
+            ajustedValue = value + ((1 - value) * ratio)
         }
         ajustedValue = (ajustedValue - 0.5) * Math.tan((ratio + 1) * Math.PI/4) + 0.5
 
@@ -205,6 +205,9 @@ Filters.gammaFilter = function(image, logOfGamma) {
     for (let x = 0; x < image.width; x++) {
         for (let y = 0; y < image.height; y++) {
             const pixel = image.getPixel(x, y)
+            
+            // Reference at this:
+            //      https://www.youtube.com/watch?v=wFx0d9c8WMs
 
             pixel.data[0] = Math.pow(pixel.data[0], gamma)
             pixel.data[1] = Math.pow(pixel.data[1], gamma)
@@ -232,9 +235,30 @@ Filters.vignetteFilter = function(image, innerR, outerR) {
     // Let's ensure that innerR is at least 0.1 smaller than outerR
     innerR = clamp(innerR, 0, outerR - 0.1);
     // ----------- STUDENT CODE BEGIN ------------
-        
+    let x_c = image.width / 2
+    let y_c = image.height / 2
+
+    const gauss = (distance, radius) => {
+        let normalized = distance / radius
+        let value = 1 - (normalized - innerR) / (outerR - innerR) ** 2 
+        return value
+    }
+
+    for (let x = 0; x < image.width; x++) {
+        for (let y = 0; y < image.height; y++) {
+            let pixel = image.getPixel(x, y)
+
+            let distance = Math.sqrt(((x - x_c) * (x - x_c)) + ((y - y_c) * (y - y_c)))
+
+            pixel.data[0] *= gauss(distance, 100000)
+            pixel.data[1] *= gauss(distance, 100000)
+            pixel.data[2] *= gauss(distance, 100000)
+
+            image.setPixel(x, y, pixel)
+        }
+    }
     // ----------- STUDENT CODE END ------------
-    Gui.alertOnce ('vignetteFilter is not implemented yet');
+    //Gui.alertOnce ('vignetteFilter is not implemented yet');
     return image;
 };
 
