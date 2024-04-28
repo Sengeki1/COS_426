@@ -1,4 +1,4 @@
-### Constrast
+  ### Constrast
 
 To apply contrast filter its really simple. ```contrastFilter(image, ratio)``` changes the contrast of an image by interpolating between a constant gray image ```(ratio = -1)``` with the average luminance and the original image ```(ratio = 0)```. Interpolation reduces contrast, extrapolation boosts contrast, and negative factors generate inverted images.
 
@@ -78,3 +78,19 @@ $$f(x) = round(\frac{CDF(x) - min(CDF)}{max(CDF)-min(CDF)} * (L - 1))$$
 
 Once the histogram equalization function is defined, you can update each pixel's intensity value in the image using this function
 
+### Saturation
+
+Firstly we iterate over the image and get the original pixels of that image so that we can perform the grayscale filter. We interpolate it with the saturation of the original image. 
+Next we perform the interpolation by using the formula from the provided reference which is:
+
+Alpha being ```alpha = ratio + 1```
+
+$$(1 - alpha) * Sgrayscale + alpha * Soriginal$$
+
+### White Balance
+
+The first step in the Von Kries method is to convert the image from the RGB color space to the LMS color space. This conversion involves matrix multiplication with a transformation matrix. 
+
+After converting to the LMS color space, you need to divide each pixel's LMS values by the LMS coordinates of the white point. Finally, the adjusted LMS values need to be converted back to the RGB color space to get the final white-balanced image.
+
+Reference: <https://medium.com/@KuldeepDileep/chromatic-adaptation-with-matlab-code-9af2aaf9096a>
