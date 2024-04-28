@@ -372,9 +372,26 @@ Filters.saturationFilter = function(image, ratio) {
 // the LMS coordinates of the white point color, and convert back to RGB.
 Filters.whiteBalanceFilter = function(image, white) {
     // ----------- STUDENT CODE BEGIN ------------
-    // ----------- Our reference solution uses 23 lines of code.
+    let value = white.rgbToXyz()
+    let dst_reference = value.xyzToLms()
+
+    for (let x = 0; x < image.width; x++) {
+        for (let y = 0; y < image.height; y++) {
+            let pixel = image.getPixel(x, y).rgbToXyz()
+            let source_reference = pixel.xyzToLms()
+
+            source_reference.data[0] /= dst_reference.data[0]
+            source_reference.data[1] /= dst_reference.data[1]
+            source_reference.data[2] /= dst_reference.data[2]
+
+            source_reference = source_reference.lmsToXyz()
+            let new_source = source_reference.xyzToRgb()
+
+            image.setPixel(x, y, new_source)
+        }
+    }
     // ----------- STUDENT CODE END ------------
-    Gui.alertOnce ('whiteBalanceFilter is not implemented yet');
+    //Gui.alertOnce ('whiteBalanceFilter is not implemented yet');
     return image;
 };
 
@@ -384,9 +401,46 @@ Filters.whiteBalanceFilter = function(image, white) {
 //
 Filters.histogramMatchFilter = function(image, refImg) {
     // ----------- STUDENT CODE BEGIN ------------
-    // ----------- Our reference solution uses 58 lines of code.
+    let n_bins = 100
+    let total_pixels = image.width * image.height
+    let histogram = new Array(n_bins).fill(0)
+
+    for (let x = 0; x < image.width; x++) {
+        for (let y = 0; y < image.height; y++) {
+            let pixel = image.getPixel(x, y).rgbToHsl()
+            let lightness = Math.round(pixel.data[2] * 100) // Scale lightness to [0, 100]
+
+            histogram[lightness]++
+        }
+    }
+
+    for (let x = 0; x < histogram.length - 1; x++) {
+        let normalized = histogram[x] / total_pixels
+        histogram[x] = normalized
+    }
+
+    let cdf = []
+    let sum = 0
+    for (let x = 0; x < histogram.length - 1; x++) {
+        sum += histogram[x]
+        cdf.push(sum)
+    }
+
+    for (let x = 0; x < refImg.width; x++) {
+        for (let y = 0; y < refImg.height; y++) {
+            let pixel = refImg.getPixel(x, y).rgbToHsl()
+
+            let lightness = Math.round(pixel.data[2] * 100)
+            let equalized_lightness = Math.round((cdf[lightness] - cdf[0]) / (1 - cdf[0]) * 100)
+
+            pixel.data[2] = equalized_lightness / 100
+
+            let new_pixel = pixel.hslToRgb()
+            image.setPixel(x, y, new_pixel)
+        }
+    }
     // ----------- STUDENT CODE END ------------
-    Gui.alertOnce ('histogramMatchFilter is not implemented yet');
+    //Gui.alertOnce ('histogramMatchFilter is not implemented yet');
     return image;
 };
 
