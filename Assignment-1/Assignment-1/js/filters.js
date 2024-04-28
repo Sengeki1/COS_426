@@ -280,14 +280,14 @@ Filters.histogramEqualizationFilter = function(image) {
         }
     }
 
-    for (let x = 0; x < histogram.length - 1; x++) {
+    for (let x = 0; x < histogram.length; x++) {
         let normalized = histogram[x] / total_pixels
         histogram[x] = normalized
     }
 
     let cdf = []
     let sum = 0
-    for (let x = 0; x < histogram.length - 1; x++) {
+    for (let x = 0; x < histogram.length; x++) {
         sum += histogram[x]
         cdf.push(sum)
     }
@@ -414,14 +414,14 @@ Filters.histogramMatchFilter = function(image, refImg) {
         }
     }
 
-    for (let x = 0; x < histogram.length - 1; x++) {
+    for (let x = 0; x < histogram.length; x++) {
         let normalized = histogram[x] / total_pixels
         histogram[x] = normalized
     }
 
     let cdf = []
     let sum = 0
-    for (let x = 0; x < histogram.length - 1; x++) {
+    for (let x = 0; x < histogram.length; x++) {
         sum += histogram[x]
         cdf.push(sum)
     }
@@ -454,9 +454,51 @@ Filters.gaussianFilter = function(image, sigma) {
     // the filter window will be [-winR, winR] for a total diameter of roughly Math.round(3*sigma)*2+1;
     const winR = Math.round(sigma * 3);
     // ----------- STUDENT CODE BEGIN ------------
-    // ----------- Our reference solution uses 58 lines of code.
+    function gaussKernel (x, y) {
+        return (1 / (2 * Math.PI * winR ** 2)) * Math.exp (- (x ** 2  + y ** 2) / (2 * winR ** 2))
+    }
+    
+    let window_size = 2 * winR + 1
+    let kernel = new Array(window_size).fill(0).map(() => new Array(window_size).fill(0)) // Matrix
+
+    for(let x = 0; x < kernel.length; x++) {
+        for(let y = 0; y < kernel.length; y++) {
+            // Calculate the offset of the current element from the center
+            kernel[x][y] = gaussKernel(x, y)
+        }
+    }
+    let sum = 0
+    kernel.forEach(row => {
+        row.forEach(num => {
+            sum += num
+        })
+    })
+    console.log(kernel)
+    kernel = kernel.map(row => row.map(num => num / sum)) // normalize
+
+    for (let x = 0; x < newImg.width; x++) {
+        for (let y = 0; y < newImg.height; y++) {
+
+            var accumulator = new Pixel(0, 0, 0)
+
+            var minX = Math.max(0, x - winR)
+            var maxX = Math.min(newImg.width - 1, x + winR)
+            var minY = Math.max(0, y - winR)
+            var maxY = Math.min(newImg.height - 1, y + winR)
+
+            for (let i = minX; i <= maxX; i++) {
+                for (let j = minY; j <= maxY; j++) {
+                    var neighborhoodPixel = image.getPixel(i, j)
+                    var weightedPixel = neighborhoodPixel.multipliedBy(kernel[i - minX][j - minY])
+                    accumulator = accumulator.plus(weightedPixel)
+                }
+            }
+
+            newImg.setPixel(x, y, accumulator)
+        }
+    }
     // ----------- STUDENT CODE END ------------
-    Gui.alertOnce ('gaussianFilter is not implemented yet');
+    //Gui.alertOnce ('gaussianFilter is not implemented yet');
     return newImg;
 };
 
@@ -466,9 +508,41 @@ Filters.gaussianFilter = function(image, sigma) {
 */
 Filters.sharpenFilter = function(image) {
     // ----------- STUDENT CODE BEGIN ------------
-    // ----------- Our reference solution uses 33 lines of code.
+    var edge_kernel = [[-1, -1, -1],
+                       [-1,  11, -1],
+                       [-1, -1, -1]]
+
+    var sum = 0
+    edge_kernel.forEach(row => {
+        row.forEach(num => {
+            sum += num
+        })
+    })
+    edge_kernel = edge_kernel.map(row => row.map(num => num / sum))
+
+    for (let x = 0; x < image.width; x++) {
+        for (let y = 0; y < image.height; y++) {
+
+            var accumulator = new Pixel(0, 0, 0)
+
+            var minX = Math.max(0, x - 1)
+            var maxX = Math.min(image.width - 1, x + 1)
+            var minY = Math.max(0, y - 1)
+            var maxY = Math.min(image.height - 1, y + 1)
+
+            for (let i = minX; i <= maxX; i++) {
+                for (let j = minY; j <= maxY; j++) {
+                    var neighborhoodPixel = image.getPixel(i, j)
+                    var weightedPixel = neighborhoodPixel.multipliedBy(edge_kernel[i - minX][j - minY])
+                    accumulator = accumulator.plus(weightedPixel)
+                }
+            }
+
+            image.setPixel(x, y, accumulator)
+        }
+    }
     // ----------- STUDENT CODE END ------------
-    Gui.alertOnce ('sharpenFilter is not implemented yet');
+    //Gui.alertOnce ('sharpenFilter is not implemented yet');
     return image;
 };
 
@@ -480,10 +554,72 @@ Filters.sharpenFilter = function(image) {
 */
 Filters.edgeFilter = function(image) {
     // ----------- STUDENT CODE BEGIN ------------
-    // ----------- Our reference solution uses 57 lines of code.
+    var edge_kernel = [[-1, -1, -1],
+                       [-1, 9, -1],
+                       [-1, -1, -1]]
+
+    var sum = 0
+    edge_kernel.forEach(row => {
+        row.forEach(num => {
+            sum += num
+        })
+    })
+    edge_kernel = edge_kernel.map(row => row.map(num => num / sum ))
+
+    function grayscale (pixel) {
+        const luminance = 0.2126 * pixel.data[0] + 0.7152 * pixel.data[1] + 0.0722 * pixel.data[2];
+        pixel.data[0] = luminance;
+        pixel.data[1] = luminance;
+        pixel.data[2] = luminance;
+        
+        return pixel
+    }
+
+    for (let x = 0; x < image.width; x++) {
+        for (let y = 0; y < image.height; y++) {
+            let pixel = image.getPixel(x, y)
+
+            // inverting the image
+            pixel.data[0] = 1 - pixel.data[0]
+            pixel.data[1] = 1 - pixel.data[1]
+            pixel.data[2] = 1 - pixel.data[2]
+
+            let new_pixel = grayscale(pixel)
+
+            image.setPixel(x, y, new_pixel)
+        }
+    }
+
+    let newImage = image.createImg(image.width, image.height) 
+
+    for (let x = 0; x < image.width; x++) {
+        for (let y = 0; y < image.height; y++) {
+
+            var accumulator = new Pixel(0, 0, 0)
+
+            var minX = Math.max(0, x - 1)
+            var maxX = Math.min(image.width - 1, x + 1)
+            var minY = Math.max(0, y - 1)
+            var maxY = Math.min(image.height - 1, y + 1)
+
+            for (let i = minX; i <= maxX; i++) {
+                for (let j = minY; j <= maxY; j++) {
+                    var neighborhoodPixel = image.getPixel(i, j)
+                    var weightedPixel = neighborhoodPixel.multipliedBy(edge_kernel[i - minX][j - minY])
+                    accumulator = accumulator.plus(weightedPixel)
+                }
+            }
+
+            if ((accumulator.data[0] * 255) > 235) {
+                newImage.setPixel(x, y, new Pixel(255, 255, 255))
+            } else {
+                newImage.setPixel(x, y, new Pixel(0, 0, 0))
+            }
+        }
+    }
     // ----------- STUDENT CODE END ------------
-    Gui.alertOnce ('edgeFilter is not implemented yet');
-    return image;
+    //Gui.alertOnce ('edgeFilter is not implemented yet');
+    return newImage;
 };
 
 // Set a pixel to the median value in its local neighbor hood. You might want to
