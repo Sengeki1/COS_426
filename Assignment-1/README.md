@@ -94,3 +94,13 @@ The first step in the Von Kries method is to convert the image from the RGB colo
 After converting to the LMS color space, you need to divide each pixel's LMS values by the LMS coordinates of the white point. Finally, the adjusted LMS values need to be converted back to the RGB color space to get the final white-balanced image.
 
 Reference: <https://medium.com/@KuldeepDileep/chromatic-adaptation-with-matlab-code-9af2aaf9096a>
+
+### Edges
+
+To implement an edge detection filter using convolution first we set its kernel then we normalize it so that it doesn't change the overall brightness of the image. Then we invert each pixel in the image so that the image is clearer for visualization once we determine it's edges. 
+
+$$pixel = 1 - pixel$$
+
+Then we set the image as grayscaled so that we can find areas in the image where the intensity is higher which will allow us to work better with the image in calculating its edges.
+
+Before convolving the image with the kernel, we create a new image and set only the edge pixels to white, which will allow us to work better with the image in calculating edges.
