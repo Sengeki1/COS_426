@@ -509,7 +509,7 @@ Filters.gaussianFilter = function(image, sigma) {
 Filters.sharpenFilter = function(image) {
     // ----------- STUDENT CODE BEGIN ------------
     var edge_kernel = [[-1, -1, -1],
-                       [-1,  11, -1],
+                       [-1, 11, -1],
                        [-1, -1, -1]]
 
     var sum = 0
@@ -657,9 +657,6 @@ Filters.medianFilter = function(image, winR) {
     // ----------- STUDENT CODE END ------------
     //Gui.alertOnce ('medianFilter is not implemented yet');
     return image;
-    // ----------- STUDENT CODE END ------------
-    Gui.alertOnce ('medianFilter is not implemented yet');
-    return image;
 };
 
 // Apply a bilateral filter to the image. You will likely want to reference
@@ -668,12 +665,41 @@ Filters.bilateralFilter = function(image, sigmaR, sigmaS) {
     // reference: https://en.wikipedia.org/wiki/Bilateral_filter
     // we first compute window size and preprocess sigmaR
     const winR = Math.round((sigmaR + sigmaS) * 1.5);
-    sigmaR = sigmaR * (Math.sqrt(2) * winR);
+    //sigmaR = sigmaR * (Math.sqrt(2) * winR);
 
     // ----------- STUDENT CODE BEGIN ------------
-    // ----------- Our reference solution uses 53 lines of code.
+    for (let x = 0; x < image.width; x++) {
+        for (let y = 0; y < image.height; y++) {
+            let pixel = image.getPixel(x, y)
+
+            let accumulator = new Pixel(0, 0, 0)
+            var totalweight = 0
+
+            let minX = Math.max(0, x - winR)
+            let maxX = Math.min(image.width - 1, x + winR)
+            let minY = Math.max(0, y - winR)
+            let maxY = Math.min(image.height - 1, y + winR)
+
+            for (let i = minX; i <= maxX; i++) {
+                for (let j = minY; j <= maxY; j++) {
+                    let neighborhoodPixel = image.getPixel(i, j)
+                    
+                    let weight = Math.exp(- (((x - i) ** 2 + (y - j) ** 2) / (2 * sigmaS ** 2)) - 
+                    (Math.abs(pixel.data[0] - neighborhoodPixel.data[0]) ** 2 +
+                     Math.abs(pixel.data[1] - neighborhoodPixel.data[1]) ** 2 + 
+                     Math.abs(pixel.data[2] - neighborhoodPixel.data[2]) ** 2) / (2 * sigmaR ** 2))
+                    
+                    accumulator = accumulator.plus(neighborhoodPixel.multipliedBy(weight))
+                    totalweight += weight
+                }
+            }
+            let new_pixel = accumulator.dividedBy(totalweight)
+
+            image.setPixel(x, y, new_pixel)
+        }
+    }
     // ----------- STUDENT CODE END ------------
-    Gui.alertOnce ('bilateralFilter is not implemented yet');
+    //Gui.alertOnce ('bilateralFilter is not implemented yet');
     return image;
 };
 
