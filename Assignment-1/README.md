@@ -104,3 +104,17 @@ $$pixel = 1 - pixel$$
 Then we set the image as grayscaled so that we can find areas in the image where the intensity is higher which will allow us to work better with the image in calculating its edges.
 
 Before convolving the image with the kernel, we create a new image and set only the edge pixels to white, which will allow us to work better with the image in calculating edges.
+
+### Bilateral
+
+A bilateral filter is a non-linear, edge-preserving, and noise-reducing smoothing filter for images. It replaces the intensity of each pixel with a weighted average of intensity values from nearby pixels. This weight can be based on a Gaussian distribution.
+
+For the pixel $I(i,j)$ located at $(i,j)$, the bilateral filter weight of pixel $I(k,l)$, $I$ being the intensity value of the pixel, is given by:
+
+$$w(i,j,k,l) = exp(- \frac{(i - k)^2 + (j - l)^2}{2σ_d^2} - \frac{||I(i,j) - I(k,l)||^2}{2σ_r^2})$$
+
+After calculating the weights, normalize them: 
+
+$$I_D(i,j) = \frac{Σ_{k, l} I(k,l)w(i,j,k,l)}{Σ_{k, l}w(i,j,k,l)}$$
+
+where $I_D$ is the denoised intensity of pixel $(i, j)$
