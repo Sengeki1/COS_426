@@ -627,7 +627,36 @@ Filters.edgeFilter = function(image) {
 Filters.medianFilter = function(image, winR) {
     // winR: the window will be  [-winR, winR];
     // ----------- STUDENT CODE BEGIN ------------
-    // ----------- Our reference solution uses 36 lines of code.
+    let window = 2 * winR + 1
+    let kernel = new Array(window).fill(0).map(() => new Array(window).fill(0))
+    let kernel_size = kernel.length * kernel.length
+    
+    for (let x = 0; x < image.width; x++) {
+        for (let y = 0; y < image.height; y++) {
+            var accumulator = new Pixel(0, 0, 0)
+            var median = new Pixel(0, 0, 0)
+
+            var minX = Math.max(0, x - winR)
+            var maxX = Math.min(image.width - 1, x + winR)
+            var minY = Math.max(0, y - winR)
+            var maxY = Math.min(image.height - 1, y + winR)
+
+            for (let i = minX; i <= maxX; i++) {
+                for (let j = minY; j <= maxY; j++) {
+                    var neighborhoodPixel = image.getPixel(i, j)
+                    accumulator = accumulator.plus(neighborhoodPixel)
+                }
+            }
+
+            median = accumulator.dividedBy(kernel_size) // get the median value of each pixel
+            // reference:  https://www.cs.auckland.ac.nz/courss/compsci373s1c/PatricesLectures/Image%20Filtering.pdf
+
+            image.setPixel(x, y, median)
+        }
+    }
+    // ----------- STUDENT CODE END ------------
+    //Gui.alertOnce ('medianFilter is not implemented yet');
+    return image;
     // ----------- STUDENT CODE END ------------
     Gui.alertOnce ('medianFilter is not implemented yet');
     return image;
