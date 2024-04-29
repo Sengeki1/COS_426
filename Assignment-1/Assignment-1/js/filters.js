@@ -683,7 +683,7 @@ Filters.bilateralFilter = function(image, sigmaR, sigmaS) {
             for (let i = minX; i <= maxX; i++) {
                 for (let j = minY; j <= maxY; j++) {
                     let neighborhoodPixel = image.getPixel(i, j)
-                    
+
                     let weight = Math.exp(- (((x - i) ** 2 + (y - j) ** 2) / (2 * sigmaS ** 2)) - 
                     (Math.abs(pixel.data[0] - neighborhoodPixel.data[0]) ** 2 +
                      Math.abs(pixel.data[1] - neighborhoodPixel.data[1]) ** 2 + 
@@ -729,10 +729,21 @@ Filters.randomFilter = function(image) {
     image = Filters.grayscaleFilter(image);
 
     // ----------- STUDENT CODE BEGIN ------------
-    // ----------- Our reference solution uses 12 lines of code.
+    for (let x = 0; x < image.width; x++) {
+        for (let y = 0; y < image.height; y++) {
+            let pixel = image.getPixel(x, y)
+
+            for (let c = 0; c < 3; c++) {
+                pixel.data[c] = (pixel.data[c] * Math.random()) * 3.1
+            }
+            pixel.clamp()
+            image.setPixel(x, y, pixel)
+        }
+    }
+    let new_image = Filters.quantizeFilter(image)
     // ----------- STUDENT CODE END ------------
-    Gui.alertOnce ('randomFilter is not implemented yet');
-    return image;
+    //Gui.alertOnce ('randomFilter is not implemented yet');
+    return new_image;
 };
 
 // Apply the Floyd-Steinberg dither with error diffusion
@@ -741,9 +752,30 @@ Filters.floydFilter = function(image) {
     image = Filters.grayscaleFilter(image);
 
     // ----------- STUDENT CODE BEGIN ------------
-    // ----------- Our reference solution uses 27 lines of code.
+    for (let y = 0; y < image.height; y++) {
+        for (let x = 0; x < image.width; x++) {
+            let pixel = image.getPixel(x, y)
+
+            let newR = Math.round(pixel.data[0] * 255 / 255)
+            let newG = Math.round(pixel.data[1] * 255 / 255)
+            let newB = Math.round(pixel.data[2] * 255 / 255)
+            image.setPixel(x, y, new Pixel(newR, newG, newB))
+
+            let errR = pixel.data[0] - newR
+            let errG = pixel.data[1] - newG
+            let errB = pixel.data[2] - newB
+
+            let error = new Pixel(errR, errG, errB)
+
+            image.setPixel(x + 1,     y, image.getPixel(x + 1,     y).plus(error.multipliedBy(7 / 16)))
+            image.setPixel(x - 1, y + 1, image.getPixel(x - 1, y + 1).plus(error.multipliedBy(3 / 16))) 
+            image.setPixel(x,     y + 1, image.getPixel(x,     y + 1).plus(error.multipliedBy(5 / 16)))
+            image.setPixel(x + 1, y + 1, image.getPixel(x + 1, y + 1).plus(error.multipliedBy(1 / 16)))
+
+        }
+    }
     // ----------- STUDENT CODE END ------------
-    Gui.alertOnce ('floydFilter is not implemented yet');
+    //Gui.alertOnce ('floydFilter is not implemented yet');
     return image;
 };
 
