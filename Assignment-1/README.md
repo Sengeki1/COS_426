@@ -119,7 +119,7 @@ $$I_D(i,j) = \frac{Σ_{k, l} I(k,l)w(i,j,k,l)}{Σ_{k, l}w(i,j,k,l)}$$
 
 where $I_D$ is the denoised intensity of pixel $(i, j)$
 
-### FlyodFilter
+### Error diffusion Dither
 
 The algorithm achieves dithering using error diffusion, meaning it pushes (adds) the residual quantization error of a pixel onto its neighboring pixels, to be dealt with later. It spreads the debt out according to the distribution.
 
@@ -143,3 +143,7 @@ for each y from top to bottom do
 ```
 
 For more information: <https://en.wikipedia.org/wiki/Floyd%E2%80%93Steinberg_dithering>
+
+### Ordered Dithering
+
+information: <https://www.youtube.com/watch?v=IviNO7iICTM> also <https://en.wikipedia.org/wiki/Ordered_dithering>
