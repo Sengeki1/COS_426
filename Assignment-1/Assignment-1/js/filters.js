@@ -786,9 +786,32 @@ Filters.orderedFilter = function(image) {
     image = Filters.grayscaleFilter(image);
 
     // ----------- STUDENT CODE BEGIN ------------
-    // ----------- Our reference solution uses 31 lines of code.
+    let matrix = [[0, 2], 
+                  [3, 1]]
+
+    let sum = 0
+    matrix.forEach(row => {
+        row.forEach(num => {
+            sum += num
+        })
+    })
+    matrix = matrix.map(row => row.map(num => num / sum))
+
+    for (let x = 0; x < image.width; x++) {
+        for(let y = 0; y < image.height; y++) {
+            let pixel = image.getPixel(x, y)
+
+            let threshold = matrix[x % matrix.length][y % matrix.length]
+
+            if (pixel.data[0] > threshold) {
+                image.setPixel(x, y, new Pixel(255, 255, 255))
+            } else {
+                image.setPixel(x, y, new Pixel(0, 0, 0))
+            }
+        }
+    }
     // ----------- STUDENT CODE END ------------
-    Gui.alertOnce ('orderedFilter is not implemented yet');
+    //Gui.alertOnce ('orderedFilter is not implemented yet');
     return image;
 };
 
