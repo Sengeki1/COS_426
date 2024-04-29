@@ -118,3 +118,28 @@ After calculating the weights, normalize them:
 $$I_D(i,j) = \frac{Σ_{k, l} I(k,l)w(i,j,k,l)}{Σ_{k, l}w(i,j,k,l)}$$
 
 where $I_D$ is the denoised intensity of pixel $(i, j)$
+
+### FlyodFilter
+
+The algorithm achieves dithering using error diffusion, meaning it pushes (adds) the residual quantization error of a pixel onto its neighboring pixels, to be dealt with later. It spreads the debt out according to the distribution.
+
+#### Pseudocode
+
+```jai
+for each y from top to bottom do
+    for each x from left to right do
+        oldpixel := pixels[x][y]
+        newpixel := find_closest_palette_color(oldpixel)
+        pixels[x][y] := newpixel
+        quant_error := oldpixel - newpixel
+        pixels[x + 1][y    ] := pixels[x + 1][y    ] + quant_error × 7 / 16
+        pixels[x - 1][y + 1] := pixels[x - 1][y + 1] + quant_error × 3 / 16
+        pixels[x    ][y + 1] := pixels[x    ][y + 1] + quant_error × 5 / 16
+        pixels[x + 1][y + 1] := pixels[x + 1][y + 1] + quant_error × 1 / 16
+```
+
+```jai
+  find_closest_palette_color(oldpixel) = round(oldpixel / 255)
+```
+
+For more information: <https://en.wikipedia.org/wiki/Floyd%E2%80%93Steinberg_dithering>
