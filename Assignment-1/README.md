@@ -210,3 +210,34 @@ We first calculates the distance between the current pixel and the center of the
 his distance is used as a measure of how far away the pixel is from the center and it determines how much each pixel should be shifted or "swirled". Pixels closer to the center will be shifted less, while pixels farther from the center will be shifted more. By using the Euclidean distance, the function can create a gradual swirling effect, with pixels near the center experiencing minimal shifting and pixels further away experiencing greater shifting.
 
 Lastly, one important step is to calculates the angle of rotation for the current pixel based on the distance from the center. This determines how much the pixel should be rotated.
+
+## Sampling
+
+### Point
+
+When you need to determine the color of a pixel at a specific coordinate in an image, point sampling simply selects the color value of the nearest pixel to that coordinate. 
+The coordinates ```x``` and ```y``` are first rounded to the nearest integers using ```Math.round(x)``` and ```Math.round(y)```.
+
+### Gaussian
+
+Gaussian sampling in image processing involves using the Gaussian distribution to calculate the weights of neighboring pixels when applying a Gaussian filter to an image. This weighted averaging process smooths out the image while preserving important details.
+
+For each pixel in the image, we place the Gaussian kernel centered at that pixel.
+We then compute the weighted sum of the pixel values in the kernel's neighborhood, with weights determined by the Gaussian distribution.
+The result of this weighted sum becomes the new value for the pixel.
+
+### Bilinear
+
+In bilinear interpolation, we're essentially estimating the pixel value at a position within a grid by considering the pixel values at the four nearest corners of that grid. The interpolation coefficients ```𝛼``` and ```𝛽``` determine how much influence each corner pixel has on the interpolated value, based on the relative positions of the target point within the grid.
+
+Let's consider a grid with coordinates $(x_0, y_0)$, $(x_1, y_0)$, $(x_0, y_1)$ and $(x_1, y_1)$, where $(x_0, y_0)$ represents the top-left corner, $(x_1, y_0)$ represents the top-right corner, $(x_0, y_1)$ represents the bottom-left corner and $(x_1, y_1)$ represents the bottom-right corner.
+
+The interpolation coefficients ```α``` and ```β``` are calculated as follows:
+
+$$α = \frac{x - x_0}{x_1 - x_0}$$
+
+$$β = \frac{y - y_0}{y_1 - y_0}$$
+
+The interpolated pixel value $v(x ,y)$ is computed using the formula:
+
+$$v(x, y) = ((1 - α) * (1 - β) * V00) + (α * (1 - β) * V10) + ((1 - α) * β * V01) + (α * β * V11)$$
