@@ -241,3 +241,29 @@ $$β = \frac{y - y_0}{y_1 - y_0}$$
 The interpolated pixel value $v(x ,y)$ is computed using the formula:
 
 $$v(x, y) = ((1 - α) * (1 - β) * V00) + (α * (1 - β) * V10) + ((1 - α) * β * V01) + (α * β * V11)$$
+
+
+## Composition
+
+One common method to compose a foreground image over a background image is alpha compositing. In alpha compositing, each pixel of the foreground image is blended with the corresponding pixel of the background image using an alpha value, which represents the transparency of the foreground image.
+
+Let's denote the alpha value of the foreground image as $α(x, y)$, which ranges between 0 (fully transparent) and 1 (fully opaque). The composite image $O(x, y)$ is computed as:
+
+$$O(x, y) = (1 - α(x, y)) * B(x, y) + α(x, y) * F(x, y)$$
+
+This formula represents a weighted sum of the background and foreground pixels at each location, where the weights are determined by the alpha values. If $α(x, y) = 0$, the pixel from the background image is fully visible, and if $α(x, y) = 1$, the pixel from the foreground image is fully visible.
+
+This formula essentially blends the foreground and background images based on the transparency of the foreground image at each pixel location.
+
+To work with this filter first you gotta set 3 essential images:
+* Background Image
+* Foreground Image
+* Foreground Image alpha
+
+First we setup the alpha channel of the background image with the ```getAlphaFilter```. This filter sets the alpha channel of the background image based on the luminance of the corresponding pixel in the foreground image. It calculates the luminance using the formula:
+
+$$Luminance = 0.2126 × R + 0.7152 × G + 0.0722 × B$$
+
+Then, it assigns this luminance value to the alpha channel of the background pixel. This essentially converts the luminance of the foreground image to alpha values for the background image. 
+
+If we dont do this the alpha value is consistently set to ```1``` and doesn't change for each pixel in the foreground image, then it implies that the foreground image is fully opaque, and there will be no transparency or blending effect with the background image.
