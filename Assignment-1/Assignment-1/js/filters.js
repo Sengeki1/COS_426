@@ -280,14 +280,14 @@ Filters.histogramEqualizationFilter = function(image) {
         }
     }
 
-    for (let x = 0; x < histogram.length - 1; x++) {
+    for (let x = 0; x < histogram.length; x++) {
         let normalized = histogram[x] / total_pixels
         histogram[x] = normalized
     }
 
     let cdf = []
     let sum = 0
-    for (let x = 0; x < histogram.length - 1; x++) {
+    for (let x = 0; x < histogram.length; x++) {
         sum += histogram[x]
         cdf.push(sum)
     }
@@ -372,9 +372,26 @@ Filters.saturationFilter = function(image, ratio) {
 // the LMS coordinates of the white point color, and convert back to RGB.
 Filters.whiteBalanceFilter = function(image, white) {
     // ----------- STUDENT CODE BEGIN ------------
-    // ----------- Our reference solution uses 23 lines of code.
+    let value = white.rgbToXyz()
+    let dst_reference = value.xyzToLms()
+
+    for (let x = 0; x < image.width; x++) {
+        for (let y = 0; y < image.height; y++) {
+            let pixel = image.getPixel(x, y).rgbToXyz()
+            let source_reference = pixel.xyzToLms()
+
+            source_reference.data[0] /= dst_reference.data[0]
+            source_reference.data[1] /= dst_reference.data[1]
+            source_reference.data[2] /= dst_reference.data[2]
+
+            source_reference = source_reference.lmsToXyz()
+            let new_source = source_reference.xyzToRgb()
+
+            image.setPixel(x, y, new_source)
+        }
+    }
     // ----------- STUDENT CODE END ------------
-    Gui.alertOnce ('whiteBalanceFilter is not implemented yet');
+    //Gui.alertOnce ('whiteBalanceFilter is not implemented yet');
     return image;
 };
 
@@ -384,9 +401,46 @@ Filters.whiteBalanceFilter = function(image, white) {
 //
 Filters.histogramMatchFilter = function(image, refImg) {
     // ----------- STUDENT CODE BEGIN ------------
-    // ----------- Our reference solution uses 58 lines of code.
+    let n_bins = 100
+    let total_pixels = image.width * image.height
+    let histogram = new Array(n_bins).fill(0)
+
+    for (let x = 0; x < image.width; x++) {
+        for (let y = 0; y < image.height; y++) {
+            let pixel = image.getPixel(x, y).rgbToHsl()
+            let lightness = Math.round(pixel.data[2] * 100) // Scale lightness to [0, 100]
+
+            histogram[lightness]++
+        }
+    }
+
+    for (let x = 0; x < histogram.length; x++) {
+        let normalized = histogram[x] / total_pixels
+        histogram[x] = normalized
+    }
+
+    let cdf = []
+    let sum = 0
+    for (let x = 0; x < histogram.length; x++) {
+        sum += histogram[x]
+        cdf.push(sum)
+    }
+
+    for (let x = 0; x < refImg.width; x++) {
+        for (let y = 0; y < refImg.height; y++) {
+            let pixel = refImg.getPixel(x, y).rgbToHsl()
+
+            let lightness = Math.round(pixel.data[2] * 100)
+            let equalized_lightness = Math.round((cdf[lightness] - cdf[0]) / (1 - cdf[0]) * 100)
+
+            pixel.data[2] = equalized_lightness / 100
+
+            let new_pixel = pixel.hslToRgb()
+            image.setPixel(x, y, new_pixel)
+        }
+    }
     // ----------- STUDENT CODE END ------------
-    Gui.alertOnce ('histogramMatchFilter is not implemented yet');
+    //Gui.alertOnce ('histogramMatchFilter is not implemented yet');
     return image;
 };
 
@@ -400,9 +454,51 @@ Filters.gaussianFilter = function(image, sigma) {
     // the filter window will be [-winR, winR] for a total diameter of roughly Math.round(3*sigma)*2+1;
     const winR = Math.round(sigma * 3);
     // ----------- STUDENT CODE BEGIN ------------
-    // ----------- Our reference solution uses 58 lines of code.
+    function gaussKernel (x, y) {
+        return (1 / (2 * Math.PI * winR ** 2)) * Math.exp (- (x ** 2  + y ** 2) / (2 * winR ** 2))
+    }
+    
+    let window_size = 2 * winR + 1
+    let kernel = new Array(window_size).fill(0).map(() => new Array(window_size).fill(0)) // Matrix
+
+    for(let x = 0; x < kernel.length; x++) {
+        for(let y = 0; y < kernel.length; y++) {
+            // Calculate the offset of the current element from the center
+            kernel[x][y] = gaussKernel(x, y)
+        }
+    }
+    let sum = 0
+    kernel.forEach(row => {
+        row.forEach(num => {
+            sum += num
+        })
+    })
+    console.log(kernel)
+    kernel = kernel.map(row => row.map(num => num / sum)) // normalize
+
+    for (let x = 0; x < newImg.width; x++) {
+        for (let y = 0; y < newImg.height; y++) {
+
+            var accumulator = new Pixel(0, 0, 0)
+
+            var minX = Math.max(0, x - winR)
+            var maxX = Math.min(newImg.width - 1, x + winR)
+            var minY = Math.max(0, y - winR)
+            var maxY = Math.min(newImg.height - 1, y + winR)
+
+            for (let i = minX; i <= maxX; i++) {
+                for (let j = minY; j <= maxY; j++) {
+                    var neighborhoodPixel = image.getPixel(i, j)
+                    var weightedPixel = neighborhoodPixel.multipliedBy(kernel[i - minX][j - minY])
+                    accumulator = accumulator.plus(weightedPixel)
+                }
+            }
+
+            newImg.setPixel(x, y, accumulator)
+        }
+    }
     // ----------- STUDENT CODE END ------------
-    Gui.alertOnce ('gaussianFilter is not implemented yet');
+    //Gui.alertOnce ('gaussianFilter is not implemented yet');
     return newImg;
 };
 
@@ -412,9 +508,41 @@ Filters.gaussianFilter = function(image, sigma) {
 */
 Filters.sharpenFilter = function(image) {
     // ----------- STUDENT CODE BEGIN ------------
-    // ----------- Our reference solution uses 33 lines of code.
+    var edge_kernel = [[-1, -1, -1],
+                       [-1, 11, -1],
+                       [-1, -1, -1]]
+
+    var sum = 0
+    edge_kernel.forEach(row => {
+        row.forEach(num => {
+            sum += num
+        })
+    })
+    edge_kernel = edge_kernel.map(row => row.map(num => num / sum))
+
+    for (let x = 0; x < image.width; x++) {
+        for (let y = 0; y < image.height; y++) {
+
+            var accumulator = new Pixel(0, 0, 0)
+
+            var minX = Math.max(0, x - 1)
+            var maxX = Math.min(image.width - 1, x + 1)
+            var minY = Math.max(0, y - 1)
+            var maxY = Math.min(image.height - 1, y + 1)
+
+            for (let i = minX; i <= maxX; i++) {
+                for (let j = minY; j <= maxY; j++) {
+                    var neighborhoodPixel = image.getPixel(i, j)
+                    var weightedPixel = neighborhoodPixel.multipliedBy(edge_kernel[i - minX][j - minY])
+                    accumulator = accumulator.plus(weightedPixel)
+                }
+            }
+
+            image.setPixel(x, y, accumulator)
+        }
+    }
     // ----------- STUDENT CODE END ------------
-    Gui.alertOnce ('sharpenFilter is not implemented yet');
+    //Gui.alertOnce ('sharpenFilter is not implemented yet');
     return image;
 };
 
@@ -426,10 +554,72 @@ Filters.sharpenFilter = function(image) {
 */
 Filters.edgeFilter = function(image) {
     // ----------- STUDENT CODE BEGIN ------------
-    // ----------- Our reference solution uses 57 lines of code.
+    var edge_kernel = [[-1, -1, -1],
+                       [-1,  9, -1],
+                       [-1, -1, -1]]
+
+    var sum = 0
+    edge_kernel.forEach(row => {
+        row.forEach(num => {
+            sum += num
+        })
+    })
+    edge_kernel = edge_kernel.map(row => row.map(num => num / sum ))
+
+    function grayscale (pixel) {
+        const luminance = 0.2126 * pixel.data[0] + 0.7152 * pixel.data[1] + 0.0722 * pixel.data[2];
+        pixel.data[0] = luminance;
+        pixel.data[1] = luminance;
+        pixel.data[2] = luminance;
+        
+        return pixel
+    }
+
+    for (let x = 0; x < image.width; x++) {
+        for (let y = 0; y < image.height; y++) {
+            let pixel = image.getPixel(x, y)
+
+            // inverting the image
+            pixel.data[0] = 1 - pixel.data[0]
+            pixel.data[1] = 1 - pixel.data[1]
+            pixel.data[2] = 1 - pixel.data[2]
+
+            let new_pixel = grayscale(pixel)
+
+            image.setPixel(x, y, new_pixel)
+        }
+    }
+
+    let newImage = image.createImg(image.width, image.height) 
+
+    for (let x = 0; x < image.width; x++) {
+        for (let y = 0; y < image.height; y++) {
+
+            var accumulator = new Pixel(0, 0, 0)
+
+            var minX = Math.max(0, x - 1)
+            var maxX = Math.min(image.width - 1, x + 1)
+            var minY = Math.max(0, y - 1)
+            var maxY = Math.min(image.height - 1, y + 1)
+
+            for (let i = minX; i <= maxX; i++) {
+                for (let j = minY; j <= maxY; j++) {
+                    var neighborhoodPixel = image.getPixel(i, j)
+                    var weightedPixel = neighborhoodPixel.multipliedBy(edge_kernel[i - minX][j - minY])
+                    accumulator = accumulator.plus(weightedPixel)
+                }
+            }
+
+            if ((accumulator.data[0] * 255) > 235) {
+                newImage.setPixel(x, y, new Pixel(255, 255, 255))
+            } else {
+                newImage.setPixel(x, y, new Pixel(0, 0, 0))
+            }
+        }
+    }
     // ----------- STUDENT CODE END ------------
-    Gui.alertOnce ('edgeFilter is not implemented yet');
-    return image;
+    //Gui.alertOnce ('edgeFilter is not implemented yet');
+    return newImage;
 };
 
 // Set a pixel to the median value in its local neighbor hood. You might want to
@@ -437,9 +627,35 @@ Filters.edgeFilter = function(image) {
 Filters.medianFilter = function(image, winR) {
     // winR: the window will be  [-winR, winR];
     // ----------- STUDENT CODE BEGIN ------------
-    // ----------- Our reference solution uses 36 lines of code.
+    let window = 2 * winR + 1
+    let kernel = new Array(window).fill(0).map(() => new Array(window).fill(0))
+    let kernel_size = kernel.length * kernel.length
+    
+    for (let x = 0; x < image.width; x++) {
+        for (let y = 0; y < image.height; y++) {
+            var accumulator = new Pixel(0, 0, 0)
+            var median = new Pixel(0, 0, 0)
+
+            var minX = Math.max(0, x - winR)
+            var maxX = Math.min(image.width - 1, x + winR)
+            var minY = Math.max(0, y - winR)
+            var maxY = Math.min(image.height - 1, y + winR)
+
+            for (let i = minX; i <= maxX; i++) {
+                for (let j = minY; j <= maxY; j++) {
+                    var neighborhoodPixel = image.getPixel(i, j)
+                    accumulator = accumulator.plus(neighborhoodPixel)
+                }
+            }
+
+            median = accumulator.dividedBy(kernel_size) // get the median value of each pixel
+            // reference:  https://www.cs.auckland.ac.nz/courss/compsci373s1c/PatricesLectures/Image%20Filtering.pdf
+
+            image.setPixel(x, y, median)
+        }
+    }
     // ----------- STUDENT CODE END ------------
-    Gui.alertOnce ('medianFilter is not implemented yet');
+    //Gui.alertOnce ('medianFilter is not implemented yet');
     return image;
 };
 
@@ -449,12 +665,41 @@ Filters.bilateralFilter = function(image, sigmaR, sigmaS) {
     // reference: https://en.wikipedia.org/wiki/Bilateral_filter
     // we first compute window size and preprocess sigmaR
     const winR = Math.round((sigmaR + sigmaS) * 1.5);
-    sigmaR = sigmaR * (Math.sqrt(2) * winR);
+    //sigmaR = sigmaR * (Math.sqrt(2) * winR);
 
     // ----------- STUDENT CODE BEGIN ------------
-    // ----------- Our reference solution uses 53 lines of code.
+    for (let x = 0; x < image.width; x++) {
+        for (let y = 0; y < image.height; y++) {
+            let pixel = image.getPixel(x, y)
+
+            let accumulator = new Pixel(0, 0, 0)
+            var totalweight = 0
+
+            let minX = Math.max(0, x - winR)
+            let maxX = Math.min(image.width - 1, x + winR)
+            let minY = Math.max(0, y - winR)
+            let maxY = Math.min(image.height - 1, y + winR)
+
+            for (let i = minX; i <= maxX; i++) {
+                for (let j = minY; j <= maxY; j++) {
+                    let neighborhoodPixel = image.getPixel(i, j)
+
+                    let weight = Math.exp(- (((x - i) ** 2 + (y - j) ** 2) / (2 * sigmaS ** 2)) - 
+                    (Math.abs(pixel.data[0] - neighborhoodPixel.data[0]) ** 2 +
+                     Math.abs(pixel.data[1] - neighborhoodPixel.data[1]) ** 2 + 
+                     Math.abs(pixel.data[2] - neighborhoodPixel.data[2]) ** 2) / (2 * sigmaR ** 2))
+                    
+                    accumulator = accumulator.plus(neighborhoodPixel.multipliedBy(weight))
+                    totalweight += weight
+                }
+            }
+            let new_pixel = accumulator.dividedBy(totalweight)
+
+            image.setPixel(x, y, new_pixel)
+        }
+    }
     // ----------- STUDENT CODE END ------------
-    Gui.alertOnce ('bilateralFilter is not implemented yet');
+    //Gui.alertOnce ('bilateralFilter is not implemented yet');
     return image;
 };
 
@@ -484,10 +729,21 @@ Filters.randomFilter = function(image) {
     image = Filters.grayscaleFilter(image);
 
     // ----------- STUDENT CODE BEGIN ------------
-    // ----------- Our reference solution uses 12 lines of code.
+    for (let x = 0; x < image.width; x++) {
+        for (let y = 0; y < image.height; y++) {
+            let pixel = image.getPixel(x, y)
+
+            for (let c = 0; c < 3; c++) {
+                pixel.data[c] = (pixel.data[c] * Math.random()) * 3.1
+            }
+            pixel.clamp()
+            image.setPixel(x, y, pixel)
+        }
+    }
+    let new_image = Filters.quantizeFilter(image)
     // ----------- STUDENT CODE END ------------
-    Gui.alertOnce ('randomFilter is not implemented yet');
-    return image;
+    //Gui.alertOnce ('randomFilter is not implemented yet');
+    return new_image;
 };
 
 // Apply the Floyd-Steinberg dither with error diffusion
@@ -496,9 +752,30 @@ Filters.floydFilter = function(image) {
     image = Filters.grayscaleFilter(image);
 
     // ----------- STUDENT CODE BEGIN ------------
-    // ----------- Our reference solution uses 27 lines of code.
+    for (let y = 0; y < image.height; y++) {
+        for (let x = 0; x < image.width; x++) {
+            let pixel = image.getPixel(x, y)
+
+            let newR = Math.round(pixel.data[0] * 255 / 255)
+            let newG = Math.round(pixel.data[1] * 255 / 255)
+            let newB = Math.round(pixel.data[2] * 255 / 255)
+            image.setPixel(x, y, new Pixel(newR, newG, newB))
+
+            let errR = pixel.data[0] - newR
+            let errG = pixel.data[1] - newG
+            let errB = pixel.data[2] - newB
+
+            let error = new Pixel(errR, errG, errB)
+
+            image.setPixel(x + 1,     y, image.getPixel(x + 1,     y).plus(error.multipliedBy(7 / 16)))
+            image.setPixel(x - 1, y + 1, image.getPixel(x - 1, y + 1).plus(error.multipliedBy(3 / 16))) 
+            image.setPixel(x,     y + 1, image.getPixel(x,     y + 1).plus(error.multipliedBy(5 / 16)))
+            image.setPixel(x + 1, y + 1, image.getPixel(x + 1, y + 1).plus(error.multipliedBy(1 / 16)))
+
+        }
+    }
     // ----------- STUDENT CODE END ------------
-    Gui.alertOnce ('floydFilter is not implemented yet');
+    //Gui.alertOnce ('floydFilter is not implemented yet');
     return image;
 };
 
@@ -509,9 +786,34 @@ Filters.orderedFilter = function(image) {
     image = Filters.grayscaleFilter(image);
 
     // ----------- STUDENT CODE BEGIN ------------
-    // ----------- Our reference solution uses 31 lines of code.
+    let matrix = [[0, 2], 
+                  [3, 1]]
+
+    let sum = 0
+    matrix.forEach(row => {
+        row.forEach(num => {
+            sum += num
+        })
+    })
+    matrix = matrix.map(row => row.map(num => num / sum))
+
+    for (let x = 0; x < image.width; x++) {
+        for(let y = 0; y < image.height; y++) {
+            let pixel = image.getPixel(x, y)
+
+            let threshold = matrix[x % matrix.length][y % matrix.length]
+
+            for (let c = 0; c < 3; c++) {
+                if (pixel.data[c] > threshold) {
+                    image.setPixel(x, y, new Pixel(255, 255, 255))
+                } else {
+                    image.setPixel(x, y, new Pixel(0, 0, 0))
+                }
+            }
+        }
+    }
     // ----------- STUDENT CODE END ------------
-    Gui.alertOnce ('orderedFilter is not implemented yet');
+    //Gui.alertOnce ('orderedFilter is not implemented yet');
     return image;
 };
 
@@ -521,16 +823,63 @@ Filters.orderedFilter = function(image) {
 Filters.samplePixel = function(image, x, y, mode) {
     if (mode === "bilinear") {
         // ----------- STUDENT CODE BEGIN ------------
-        // ----------- Our reference solution uses 21 lines of code.
+        let minX = Math.max(0, x - 1)
+        let maxX = Math.min(image.width - 1, x + 1)
+        let minY = Math.max(0, y - 1)
+        let maxY = Math.min(image.height - 1, y + 1)
+
+        let alpha = (x - minX) / (maxX - minX)
+        let beta  = (y - minY) / (maxY - minY)
+
+        let v0 = image.getPixel(x, y) // top-left corner
+        let v1 = image.getPixel(x + 1, y) // top-right corner
+        let v2 = image.getPixel(x, y + 1) // bottom-left corner
+        let v3 = image.getPixel(x + 1, y + 1) // bottom-right corner
+
+        let pixel = v0.multipliedBy((1 - alpha) * (1 - beta)).plus(
+            v1.multipliedBy(1 - beta).plus(
+                v2.multipliedBy(1 - alpha).plus(
+                    v3.multipliedBy(beta * alpha)
+                    )
+                )
+            )
+
+        return pixel
         // ----------- STUDENT CODE END ------------
-        Gui.alertOnce ('bilinear sampling is not implemented yet');
+        //Gui.alertOnce ('bilinear sampling is not implemented yet');
     } else if (mode === "gaussian") {
         // ----------- STUDENT CODE BEGIN ------------
-        // ----------- Our reference solution uses 38 lines of code.
+        var kernel = [ [1, 2, 1],
+                       [2, 4, 2],
+                       [1, 2, 1] ]
+
+        let sum = 0
+        kernel.forEach(row => {
+            row.forEach(num => {
+                sum += num
+            })
+         })
+                       
+        kernel = kernel.map(row => row.map(num => num / sum * 1.9)) // added some scalar for the brightness 
+        let accumulator = new Pixel(0, 0, 0)
+
+        var minX = Math.max(0, x - 1)
+        var maxX = Math.min(image.width - 1, x + 1)
+        var minY = Math.max(0, y - 1)
+        var maxY = Math.min(image.height - 1, y + 1)
+
+        for (var i = minX; i < maxX; i++) {
+            for (var j = minY; j < maxY; j++) {
+                var neighborhoodPixel = image.getPixel(i, j)
+                accumulator = accumulator.plus(neighborhoodPixel.multipliedBy(kernel[i - minX][j - minY]))
+            }
+        }
+        return accumulator
         // ----------- STUDENT CODE END ------------
-        Gui.alertOnce ('gaussian sampling is not implemented yet');
+        //Gui.alertOnce ('gaussian sampling is not implemented yet');
     } else {
         // point sampling
+        // rounds to the nearest color values
         y = Math.max(0, Math.min(Math.round(y), image.height - 1));
         x = Math.max(0, Math.min(Math.round(x), image.width - 1));
         return image.getPixel(x, y);
@@ -541,39 +890,104 @@ Filters.samplePixel = function(image, x, y, mode) {
 Filters.translateFilter = function(image, x, y, sampleMode) {
     // Note: set pixels outside the image to RGBA(0,0,0,0)
     // ----------- STUDENT CODE BEGIN ------------
-    // ----------- Our reference solution uses 21 lines of code.
+    let new_image = image.createImg(image.width, image.height)
+
+    for (let i = 0; i < image.width; i++) {
+        for (let j = 0; j < image.height; j++) {
+            
+            let xtransform = i + x
+            let ytransform = j + y
+
+            let pixel = Filters.samplePixel(image, xtransform, ytransform, sampleMode)
+            new_image.setPixel(i, j, pixel)
+        }
+    }
     // ----------- STUDENT CODE END ------------
-    Gui.alertOnce ('translateFilter is not implemented yet');
-    return image;
+    //Gui.alertOnce ('translateFilter is not implemented yet');
+    return new_image;
 };
 
 // Scale the image by some ratio and using a requested method of sampling/resampling
 Filters.scaleFilter = function(image, ratio, sampleMode) {
     // ----------- STUDENT CODE BEGIN ------------
-    // ----------- Our reference solution uses 19 lines of code.
+    let new_image = image.createImg(image.width, image.height)
+
+    let x_c = image.width / 2
+    let y_c = image.height / 2
+
+    for (let x = 0; x < image.width; x++) {
+        for (let y = 0; y < image.height; y++) {
+
+            let xscalar = (x - x_c) * ratio + x_c
+            let yscalar = (y - y_c) * ratio + y_c
+
+            let pixel = Filters.samplePixel(image, xscalar, yscalar, sampleMode)
+            new_image.setPixel(x, y, pixel)
+        }
+    }
     // ----------- STUDENT CODE END ------------
-    Gui.alertOnce ('scaleFilter is not implemented yet');
-    return image;
+    //Gui.alertOnce ('scaleFilter is not implemented yet');
+    return new_image;
 };
 
 // Rotate the image by some angle and using a requested method of sampling/resampling
 Filters.rotateFilter = function(image, radians, sampleMode) {
     // Note: set pixels outside the image to RGBA(0,0,0,0)
     // ----------- STUDENT CODE BEGIN ------------
-    // ----------- Our reference solution uses 29 lines of code.
+    let new_image = image.createImg(image.width, image.height)
+
+    let x_c = image.width / 2
+    let y_c = image.height / 2 
+
+    for (let x = 0; x < image.width; x++) {
+        for (let y = 0; y < image.height; y++) {
+
+            let x_rotate = (x - x_c) * Math.cos(radians) - (y - y_c) * Math.sin(radians) + x_c
+            let y_rotate = (x - x_c) * Math.sin(radians) + (y - y_c) * Math.cos(radians) + y_c
+
+            let pixel = Filters.samplePixel(image, x_rotate, y_rotate, sampleMode)
+            new_image.setPixel(x, y, pixel)
+        }
+    }
     // ----------- STUDENT CODE END ------------
-    Gui.alertOnce ('rotateFilter is not implemented yet');
-    return image;
+    //Gui.alertOnce ('rotateFilter is not implemented yet');
+    return new_image;
 };
 
 // Swirl the filter about its center. The rotation of the swirl should be in linear increase
 // along the radial axis up to radians
 Filters.swirlFilter = function(image, radians, sampleMode) {
     // ----------- STUDENT CODE BEGIN ------------
-    // ----------- Our reference solution uses 26 lines of code.
+    let new_image = image.createImg(image.width, image.height)
+
+    let x_c = image.width / 2 
+    let y_c = image.height / 2
+
+    for (let x = 0; x < image.width; x++) {
+        for (let y = 0; y < image.height; y++) {
+
+            let distance = Math.sqrt((x - x_c) ** 2 + (y - y_c) ** 2)
+
+            let angle = 100 * radians / distance
+
+            if (distance != 0) {
+                // rotation function
+                let newX = Math.round( (x - x_c) * Math.cos(angle) + (y - y_c) * Math.sin(angle) + x_c)
+                let newY = Math.round(-(x - x_c) * Math.sin(angle) + (y - y_c) * Math.cos(angle) + y_c)
+
+                // Make sure newX & newY are within the image
+                newX = Math.max(0, Math.min(image.width  - 1, newX))
+                newY = Math.max(0, Math.min(image.height - 1, newY))
+
+                let pixel = Filters.samplePixel(image, newX, newY, sampleMode)
+                new_image.setPixel(x, y, pixel)
+            }
+            
+        }
+    }
     // ----------- STUDENT CODE END ------------
-    Gui.alertOnce ('swirlFilter is not implemented yet');
-    return image;
+    //Gui.alertOnce ('swirlFilter is not implemented yet');
+    return new_image;
 };
 
 // Set alpha from luminance
