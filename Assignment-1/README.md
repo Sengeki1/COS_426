@@ -198,3 +198,15 @@ $$x' = x * cos(θ) - y * sin(θ)$$
 
 $$y' = x * sin(θ) + y * cos(θ)$$
 
+### Swirl
+
+Following the same logic as a rotation transformation, instead of rotating the image we want it to shifts individual pixels based on their distance from the center of the image.
+
+We first calculates the distance between the current pixel and the center of the image using the Euclidean distance formula. Calculating the Euclidean distance serves two main purposes in this context: 
+
+* Determining Distance from Center
+* Controlling Intensity of Swirl
+
+his distance is used as a measure of how far away the pixel is from the center and it determines how much each pixel should be shifted or "swirled". Pixels closer to the center will be shifted less, while pixels farther from the center will be shifted more. By using the Euclidean distance, the function can create a gradual swirling effect, with pixels near the center experiencing minimal shifting and pixels further away experiencing greater shifting.
+
+Lastly, one important step is to calculates the angle of rotation for the current pixel based on the distance from the center. This determines how much the pixel should be rotated.
