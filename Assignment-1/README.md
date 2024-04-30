@@ -146,4 +146,55 @@ For more information: <https://en.wikipedia.org/wiki/Floyd%E2%80%93Steinberg_dit
 
 ### Ordered Dithering
 
-information: <https://www.youtube.com/watch?v=IviNO7iICTM> also <https://en.wikipedia.org/wiki/Ordered_dithering>
+The algorithm reduces the number of colors by applying a threshold map ```M``` to the pixels displayed, causing some pixels to change color, depending on the distance of the original color from the available color entries in the reduced palette.
+
+A more simpler way to analize it, is that we compare the intensity of a given pixel with a standard threshold matrix. If the intensity value is higher then the threshold set it as white and if not black.
+
+For more information: 
+<https://en.wikipedia.org/wiki/Ordered_dithering>
+<https://www.youtube.com/watch?v=IviNO7iICTM&t=1s>
+
+## Transformations
+
+### Translate
+
+The most simple geometric transform is the translation along one of the image axis or all at once. An image, or the ensemble of pixels that are translated in the coordinate system, undergo the equations:
+
+$$x' = x + x_T$$ 
+
+$$y' = y + y_T$$
+
+Where $x'$ and $y'$ are the coordinates of a pixel $P$ in the new image and $x$ and $y$ the coordinates of the original. The distance of which $P$ is translated in every direction is denoted by $x_T$ and $y_T$
+
+![image](https://github.com/Sengeki1/JS_Paint_COS426/assets/106749775/da6b908e-92f2-4f5f-9894-d8fbea6f741b)
+
+### Scale
+
+To scale an image we simply multiply the current position of a given pixel by a scalar. 
+
+```js
+  let xscalar = (x - x_c) * ratio + x_c
+  let yscalar = (y - y_c) * ratio + y_c
+```
+
+* ```x``` and ```y``` represent the original pixel coordinates
+* ```x_c``` and ```y_c``` represent the center of the image.
+* ```ratio``` is the scaling ratio
+
+By applying these equations to each pixel in the image, you're scaling it around the center point $(x_c, y_c)$. This method preserves the center of the image while scaling it.
+
+### Rotate
+
+To apply rotation we use a rotation matrix which is given by:
+
+```js
+ R = [[cos(theta), -sin(theta)],
+      [sin(theta),  cos(theta]]
+```
+
+The formula would be this:
+
+$$x' = x * cos(θ) - y * sin(θ)$$ 
+
+$$y' = x * sin(θ) + y * cos(θ)$$
+
