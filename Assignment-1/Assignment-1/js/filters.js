@@ -74,11 +74,6 @@ Filters.brushFilter = function(image, radius, color, vertsString) {
     // radius and color are specified in function arguments.
     // ----------- STUDENT CODE BEGIN ------------
      // centers is an array of (x, y) coordinates that each defines a circle center
-
-
-    // draw a filled circle centered at every location in centers[].
-    // radius and color are specified in function arguments.
-    // ----------- STUDENT CODE BEGIN ------------
     for (var i = 0; i < centers.length; i++) {
         var center = centers[i]
         
@@ -1011,9 +1006,19 @@ Filters.getAlphaFilter = function(backgroundImg, foregroundImg) {
 Filters.compositeFilter = function(backgroundImg, foregroundImg) {
     // Assume the input images are of the same sizes.
     // ----------- STUDENT CODE BEGIN ------------
-    // ----------- Our reference solution uses 14 lines of code.
+    function compose(alpha, bg, fg) {
+        return bg.multipliedBy((1 - alpha)).plus(fg.multipliedBy(alpha))
+    }
+    for (let x = 0; x < foregroundImg.width; x++) {
+        for (let y = 0; y < foregroundImg.height; y++) {
+            let pixel = foregroundImg.getPixel(x, y)
+            let alpha = pixel.a
+
+            backgroundImg.setPixel(x, y, compose(alpha, backgroundImg.getPixel(x, y), pixel))
+        }
+    }
     // ----------- STUDENT CODE END ------------
-    Gui.alertOnce ('compositeFilter is not implemented yet');
+    //Gui.alertOnce ('compositeFilter is not implemented yet');
     return backgroundImg;
 };
 
