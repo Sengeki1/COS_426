@@ -1024,7 +1024,7 @@ Filters.compositeFilter = function(backgroundImg, foregroundImg) {
 
 // Morph two images according to a set of correspondance lines
 Filters.morphFilter = function(initialImg, finalImg, alpha, sampleMode, linesFile) {
-    const lines = Parser.parseJson("images/" + linesFile);
+    const lines = Parser.parseJson("./images/marker.json");
 
     // The provided linesFile represents lines in a flipped x, y coordinate system
     //  (i.e. x for vertical direction, y for horizontal direction).
@@ -1037,9 +1037,42 @@ Filters.morphFilter = function(initialImg, finalImg, alpha, sampleMode, linesFil
     }
 
     // ----------- STUDENT CODE BEGIN ------------
-    // ----------- Our reference solution uses 114 lines of code.
+    var intersect_points = []
+    // Calculating intersection point of two correspondance lines, each
+    for (let i = 0; i < lines.initial.length; i++) {
+        var line1 = lines.initial[i]
+        var line2 = lines.final[i]
+    
+        var dx1 = line1.x1 - line1.x0 
+        var dy1 = line1.y1 - line1.y0
+        var dx2 = line2.x1 - line2.x0
+        var dy2 = line2.y1 - line2.y0
+
+        var det = dx1 * dy2 - dy1 * dx2 // determinante
+        if (det != 0) {
+            var s = (dx1 * (line1.y0 - line2.y0) - dy1 * (line1.x0 - line2.x0)) / det
+            var x = line1.x0 + s * dx1
+            var y = line1.y0 + s * dy1
+            intersect_points.push({x: x, y: y})
+        }
+    }
+
+    // Constructing Matrix A to find the homographic Matrix
+    var A = []
+    for (let i = 0; i < intersect_points.length; i++) {
+        var x0 = intersect_points[i].x;
+        var y0 = intersect_points[i].y;
+        var x1 = intersect_points[(i + 1) % intersect_points.length].x; // Circular index
+        var y1 = intersect_points[(i + 1) % intersect_points.length].y;
+    
+        A.push([
+            -x0, -y0, -1, 0, 0, 0, x0 * x1, y0 * x1, x1,
+            0, 0, 0, -x0, -y0, -1, x0 * y1, y0 * y1, y1
+        ]);
+    }
+    // compute SVD to get the homographic Matrix
     // ----------- STUDENT CODE END ------------
-    Gui.alertOnce ('morphFilter is not implemented yet');
+    //Gui.alertOnce ('morphFilter is not implemented yet');
     return image;
 };
 
