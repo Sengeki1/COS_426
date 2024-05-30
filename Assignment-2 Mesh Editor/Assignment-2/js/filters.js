@@ -89,11 +89,12 @@ Filters.scale = function(mesh, s) {
   const verts = mesh.getModifiableVertices();
 
   // ----------- STUDENT CODE BEGIN ------------
+  const t = new THREE.Vector3(s, s, s);
   for (let i = 0; i < verts.length; i++) {
-    verts[i].position.multiply(s)
+    verts[i].position.multiply(t)
   }
   // ----------- STUDENT CODE END ------------
-  Gui.alertOnce("Scaling is not implemented yet");
+  //Gui.alertOnce("Scaling is not implemented yet");
 
   mesh.calculateFacesArea();
   mesh.updateNormals();
