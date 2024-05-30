@@ -178,10 +178,12 @@ Filters.inflate = function(mesh, factor) {
   const verts = mesh.getModifiableVertices();
 
   // ----------- STUDENT CODE BEGIN ------------
-  // ----------- Our reference solution uses 16 lines of code.
+  for (let i = 0; i < verts.length; i++) {     
+    verts[i].position.add(new THREE.Vector3(verts[i].normal.x * factor,verts[i].normal.y * factor,verts[i].normal.z * factor))
+  }
+  mesh.updateVertexNormals()
   // ----------- STUDENT CODE END ------------
-  Gui.alertOnce("Inflate is not implemented yet");
-
+  //Gui.alertOnce("Inflate is not implemented yet");
   mesh.calculateFacesArea();
   mesh.updateNormals();
 };

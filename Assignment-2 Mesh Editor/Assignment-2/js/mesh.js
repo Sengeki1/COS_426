@@ -26,7 +26,12 @@ Mesh.prototype.edgesOnFace = function(f) {
   const halfedges = [];
 
   // ----------- STUDENT CODE BEGIN ------------
-  // ----------- Our reference solution uses 9 lines of code.
+  let startEdge = f.halfedge
+  let currentEdge = startEdge
+  do {
+    halfedges.push(currentEdge)
+    currentEdge = currentEdge.next
+  } while (currentEdge !== startEdge)
   // ----------- STUDENT CODE END ------------
 
   return halfedges;
@@ -38,7 +43,7 @@ Mesh.prototype.facesOnFace = function(f) {
   const faces = [];
 
   // ----------- STUDENT CODE BEGIN ------------
-  // ----------- Our reference solution uses 9 lines of code.
+  
   // ----------- STUDENT CODE END ------------
 
   return faces;
@@ -72,7 +77,12 @@ Mesh.prototype.facesOnVertex = function(v) {
   const faces = [];
 
   // ----------- STUDENT CODE BEGIN ------------
-  // ----------- Our reference solution uses 9 lines of code.
+  for (const face of this.faces) {
+    let vetFace = this.verticesOnFace(face)
+    if (vetFace.includes(v)) {
+      faces.push(face)
+    }
+  }
   // ----------- STUDENT CODE END ------------
 
   return faces;
@@ -115,7 +125,17 @@ Mesh.prototype.edgeBetweenVertices = function(v1, v2) {
 Mesh.prototype.calculateFaceArea = function(f) {
   let area = 0.0;
   // ----------- STUDENT CODE BEGIN ------------
-  // ----------- Our reference solution uses 21 lines of code.
+  const v0 = f.halfedge.vertex.position;
+  const v1 = f.halfedge.next.vertex.position;
+  const v2 = f.halfedge.next.next.vertex.position;
+  
+  // Use the cross product of two edges to calculate the area
+  const edge1 = new THREE.Vector3().subVectors(v1, v0);
+  const edge2 = new THREE.Vector3().subVectors(v2, v0);
+  const crossProduct = new THREE.Vector3().crossVectors(edge1, edge2);
+
+  // Area of the triangle is half the magnitude of the cross product
+  area = crossProduct.length() * 0.5;
   // ----------- STUDENT CODE END ------------
   f.area = area;
   return area;
@@ -131,9 +151,25 @@ Mesh.prototype.calculateFacesArea = function() {
 // Calculate the vertex normal at a given vertex,
 // using the face normals of bordering faces, weighted by face area
 Mesh.prototype.calculateVertexNormal = function(v) {
-  const v_normal = new THREE.Vector3(0, 0, 0);
+  var v_normal = new THREE.Vector3(0, 0, 0);
   // ----------- STUDENT CODE BEGIN ------------
-  // ----------- Our reference solution uses 11 lines of code.
+  function normalizeVector(vector) {
+    var length = Math.sqrt(vector.x * vector.x + vector.y * vector.y + vector.z * vector.z)
+    if (length !== 0) {
+        vector.x /= length
+        vector.y /= length
+        vector.z /= length
+    }
+    return vector
+  }
+
+  var adjacent = this.facesOnVertex(v) // Get all the faces adjacent to the vertex
+  for (let face of adjacent) {
+    var faceNormal = this.calculateFaceNormal(face) // calculate the normal of the given face
+    var weightedNormal = faceNormal.multiplyScalar(face.area)
+    v_normal.add(weightedNormal)
+  }
+  normalizeVector(v_normal)
   // ----------- STUDENT CODE END ------------
   v.normal = v_normal;
   return v_normal;
