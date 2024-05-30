@@ -192,9 +192,18 @@ Filters.twist = function(mesh, factor) {
   const verts = mesh.getModifiableVertices();
 
   // ----------- STUDENT CODE BEGIN ------------
-  // ----------- Our reference solution uses 8 lines of code.
+  for (let i = 0; i < verts.length; i++) {
+    let vertex = verts[i].position
+    const matrix = createRotationMatrixY(vertex.y * factor)
+
+    verts[i].position = new THREE.Vector3(
+        vertex.x * matrix[0][0] + vertex.y * matrix[0][1] + vertex.z * matrix[0][2],
+        vertex.x * matrix[1][0] + vertex.y * matrix[1][1] + vertex.z * matrix[1][2],
+        vertex.x * matrix[2][0] + vertex.y * matrix[2][1] + vertex.z * matrix[2][2]
+      )
+  }
   // ----------- STUDENT CODE END ------------
-  Gui.alertOnce("Twist is not implemented yet");
+  //Gui.alertOnce("Twist is not implemented yet");
 
   mesh.calculateFacesArea();
   mesh.updateNormals();
