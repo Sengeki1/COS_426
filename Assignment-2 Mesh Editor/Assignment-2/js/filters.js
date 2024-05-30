@@ -2,7 +2,35 @@ var Filters = Filters || {};
 
 // Space for your helper functions
 // ----------- STUDENT CODE BEGIN ------------
-// ----------- Our reference solution uses 105 lines of code.
+function createRotationMatrixX(angle) {
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
+  return [
+    [1, 0, 0],
+    [0, cos, -sin],
+    [0, sin, cos]
+  ];
+}
+
+function createRotationMatrixY(angle) {
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
+  return [
+    [cos, 0, sin],
+    [0, 1, 0],
+    [-sin, 0, cos]
+  ];
+}
+
+function createRotationMatrixZ(angle) {
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
+  return [
+    [cos, -sin, 0],
+    [sin, cos, 0],
+    [0, 0, 1]
+  ];
+}
 // ----------- STUDENT CODE END ------------
 
 // Translate all selected vertices in the mesh by the given x,y,z offsets.
@@ -26,9 +54,30 @@ Filters.rotation = function(mesh, x, y, z) {
   const verts = mesh.getModifiableVertices();
 
   // ----------- STUDENT CODE BEGIN ------------
-  // ----------- Our reference solution uses 5 lines of code.
+  function applyMatrixToVertex(vertex, matrix) {
+    let x = vertex.x
+    let y = vertex.y
+    let z = vertex.z
+    return new THREE.Vector3(
+      x * matrix[0][0] + y * matrix[0][1] + z * matrix[0][2],
+      x * matrix[1][0] + y * matrix[1][1] + z * matrix[1][2],
+      x * matrix[2][0] + y * matrix[2][1] + z * matrix[2][2]
+    )
+  }
+  const rotationMatrixX = createRotationMatrixX(x);
+  const rotationMatrixY = createRotationMatrixY(y);
+  const rotationMatrixZ = createRotationMatrixZ(z);
+  for (let i = 0; i < verts.length; i++) {
+    let vertex = verts[i].position.clone()
+
+    vertex = applyMatrixToVertex(vertex, rotationMatrixX);
+    vertex = applyMatrixToVertex(vertex, rotationMatrixY);
+    vertex = applyMatrixToVertex(vertex, rotationMatrixZ);
+
+    verts[i].position.copy(vertex)
+  }
   // ----------- STUDENT CODE END ------------
-  Gui.alertOnce("Rotation is not implemented yet");
+  //Gui.alertOnce("Rotation is not implemented yet");
 
   mesh.calculateFacesArea();
   mesh.updateNormals();
@@ -40,7 +89,9 @@ Filters.scale = function(mesh, s) {
   const verts = mesh.getModifiableVertices();
 
   // ----------- STUDENT CODE BEGIN ------------
-  // ----------- Our reference solution uses 4 lines of code.
+  for (let i = 0; i < verts.length; i++) {
+    verts[i].position.multiply(s)
+  }
   // ----------- STUDENT CODE END ------------
   Gui.alertOnce("Scaling is not implemented yet");
 
