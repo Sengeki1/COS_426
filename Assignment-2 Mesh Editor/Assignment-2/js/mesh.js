@@ -43,7 +43,17 @@ Mesh.prototype.facesOnFace = function(f) {
   const faces = [];
 
   // ----------- STUDENT CODE BEGIN ------------
-  
+  let startHalfEdge = f.halfedge;
+  let currentHalfEdge = startHalfEdge;
+
+  // Traverse around the vertex v to collect all neighboring vertices
+  do {
+    // Get the vertex pointed to by the current half-edge
+    faces.push(currentHalfEdge.face);
+
+    // Move to the next half-edge around the vertex
+    currentHalfEdge = currentHalfEdge.next;
+  } while (currentHalfEdge !== startHalfEdge);
   // ----------- STUDENT CODE END ------------
 
   return faces;
@@ -55,9 +65,20 @@ Mesh.prototype.verticesOnVertex = function(v) {
   const vertices = [];
 
   // ----------- STUDENT CODE BEGIN ------------
-  // ----------- Our reference solution uses 9 lines of code.
-  // ----------- STUDENT CODE END ------------
+  
+  // Start from any half-edge that originates from vertex v
+  let startHalfEdge = v.halfedge;
+  let currentHalfEdge = startHalfEdge;
 
+  // Traverse around the vertex v to collect all neighboring vertices
+  do {
+    // Get the vertex pointed to by the current half-edge
+    vertices.push(currentHalfEdge.vertex);
+
+    // Move to the next half-edge around the vertex
+    currentHalfEdge = currentHalfEdge.next;
+  } while (currentHalfEdge !== startHalfEdge);
+  // ----------- STUDENT CODE END ------------
   return vertices;
 };
 
@@ -187,9 +208,35 @@ Mesh.prototype.averageEdgeLength = function(v) {
   let avg = 0.0;
 
   // ----------- STUDENT CODE BEGIN ------------
-  // ----------- Our reference solution uses 9 lines of code.
-  // ----------- STUDENT CODE END ------------
+  let totalLength = 0.0
+  let count = 0
 
+  let startEdge = v.halfedge
+  let currentEdge = startEdge
+
+  while (currentEdge) {
+    const vertexPosition = currentEdge.vertex.position
+    const nextVertexPosition = currentEdge.next ? currentEdge.next.vertex.position : null
+
+    if (nextVertexPosition) {
+      // Calculate Euclidean distance manually
+      const dx = vertexPosition.x - nextVertexPosition.x
+      const dy = vertexPosition.y - nextVertexPosition.y
+      const dz = vertexPosition.z - nextVertexPosition.z
+      const edgeLength = Math.sqrt(dx * dx + dy * dy + dz * dz)
+      totalLength += edgeLength
+      count++
+    }
+
+    currentEdge = currentEdge.next
+    
+    if (currentEdge === startEdge) {
+      break; // Break the loop if we've reached the starting edge again
+    }
+  }
+
+  avg = count > 0 ? totalLength / count : 0.0
+  // ----------- STUDENT CODE END ------------
   return avg;
 };
 

@@ -117,9 +117,17 @@ Filters.noise = function(mesh, factor) {
   const verts = mesh.getModifiableVertices();
 
   // ----------- STUDENT CODE BEGIN ------------
-  // ----------- Our reference solution uses 13 lines of code.
+  for (let i = 0; i < verts.length; i++) {
+    const avgEdgeLength = mesh.averageEdgeLength(verts[i])
+    // Generate a random value in the range [-1, 1)
+    let randomValue = Math.random() * 2 - 1
+    // Offset the vertex position
+    let offset = verts[i].normal.clone().multiplyScalar(randomValue * avgEdgeLength * factor)
+    verts[i].position.add(offset)
+  }
+  mesh.updateVertexNormals()
   // ----------- STUDENT CODE END ------------
-  Gui.alertOnce("Noise is not implemented yet");
+  //Gui.alertOnce("Noise is not implemented yet");
 
   mesh.calculateFacesArea();
   mesh.updateNormals();
@@ -152,9 +160,13 @@ Filters.smooth = function(mesh, iter, delta, curvFlow, scaleDep, implicit) {
   const verts = mesh.getModifiableVertices();
 
   // ----------- STUDENT CODE BEGIN ------------
-  // ----------- Our reference solution uses 16 lines of code.
+  for (let i = 0; i < iter; i++) {
+    for (let j = 0; j < verts.length; i++) {
+      let neighbors = mesh.verticesOnVertex(verts[j])
+    }
+  }
   // ----------- STUDENT CODE END ------------
-  Gui.alertOnce("Smooth is not implemented yet");
+  //Gui.alertOnce("Smooth is not implemented yet");
   mesh.calculateFacesArea();
   mesh.updateNormals();
 };
@@ -214,9 +226,12 @@ Filters.twist = function(mesh, factor) {
 // warp a mesh using a nonlinear mapping of your choice
 Filters.wacky = function(mesh, factor) {
   // ----------- STUDENT CODE BEGIN ------------
-  // ----------- Our reference solution uses 3 lines of code.
+  const verts = mesh.getModifiableVertices()
+  for (let i = 0; i < verts.length; i++) {
+    verts[i].position.multiply(new THREE.Vector3(Math.cos(factor), Math.sin(factor), 1))
+  }
   // ----------- STUDENT CODE END ------------
-  Gui.alertOnce("Wacky is not implemented yet");
+  //Gui.alertOnce("Wacky is not implemented yet");
 
   mesh.calculateFacesArea();
   mesh.updateNormals();
