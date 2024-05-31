@@ -65,7 +65,6 @@ Mesh.prototype.verticesOnVertex = function(v) {
   const vertices = [];
 
   // ----------- STUDENT CODE BEGIN ------------
-  
   // Start from any half-edge that originates from vertex v
   let startHalfEdge = v.halfedge;
   let currentHalfEdge = startHalfEdge;
@@ -87,7 +86,12 @@ Mesh.prototype.edgesOnVertex = function(v) {
   const halfedges = [];
 
   // ----------- STUDENT CODE BEGIN ------------
-  // ----------- Our reference solution uses 9 lines of code.
+  for (const edge of this.halfedges) {
+    let vetEdge = this.edgesOnFace(edge)
+    if (vetEdge.includes(v)) { // FIX IF CONDITION
+      halfedges.push(edge)
+    }
+  }
   // ----------- STUDENT CODE END ------------
 
   return halfedges;

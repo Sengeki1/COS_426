@@ -161,8 +161,21 @@ Filters.smooth = function(mesh, iter, delta, curvFlow, scaleDep, implicit) {
 
   // ----------- STUDENT CODE BEGIN ------------
   for (let i = 0; i < iter; i++) {
-    for (let j = 0; j < verts.length; i++) {
+    for (let j = 0; j < verts.length; j++) {
       let neighbors = mesh.verticesOnVertex(verts[j])
+
+      let averagePosition = new THREE.Vector3(0, 0, 0)
+      for (let neighbor of neighbors) {
+        averagePosition.add(neighbor.position)
+      }
+      averagePosition.divideScalar(neighbors.length)
+      let direction = new THREE.Vector3(
+        averagePosition.x - verts[j].position.x,
+        averagePosition.y - verts[j].position.y,
+        averagePosition.z - verts[j].position.z
+      ).multiplyScalar(delta)
+
+      verts[j].position = verts[j].position.add(direction)
     }
   }
   // ----------- STUDENT CODE END ------------
