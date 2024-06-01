@@ -86,12 +86,14 @@ Mesh.prototype.edgesOnVertex = function(v) {
   const halfedges = [];
 
   // ----------- STUDENT CODE BEGIN ------------
-  for (const edge of this.halfedges) {
-    let vetEdge = this.edgesOnFace(edge)
-    if (vetEdge.includes(v)) { // FIX IF CONDITION
-      halfedges.push(edge)
-    }
-  }
+  let startHalfEdge = v.halfedge;
+  let currentHalfEdge = startHalfEdge;
+
+  // Traverse around the vertex v to collect all outgoing halfedges
+  do {
+    halfedges.push(currentHalfEdge.halfedge);
+    currentHalfEdge = currentHalfEdge.next;
+  } while (currentHalfEdge !== startHalfEdge);
   // ----------- STUDENT CODE END ------------
 
   return halfedges;

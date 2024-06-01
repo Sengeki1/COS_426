@@ -31,6 +31,39 @@ function createRotationMatrixZ(angle) {
     [0, 0, 1]
   ];
 }
+
+function cotangentWeightCalculation(v1, v2, mesh) {
+  const neighbors1 = mesh.verticesOnVertex(v1)
+  const neighbors2 = mesh.verticesOnVertex(v2)
+
+  const commonNeighbors = []
+  for (let neighbor of neighbors1) {
+    if (neighbors2.includes(neighbor)) commonNeighbors.push(neighbor)
+  }
+
+  if (commonNeighbors.length !== 2) {
+    return 0;
+  }
+
+  const [v3, v4] = commonNeighbors;
+  const cotAlpha = cotangent(v1.position, v2.position, v3.position);
+  const cotBeta = cotangent(v1.position, v2.position, v4.position);
+
+  return cotAlpha + cotBeta
+}
+
+function cotangent(p1, p2, p3) {
+  const u = new THREE.Vector3().subVectors(p1, p3);
+  const v = new THREE.Vector3().subVectors(p2, p3);
+  const dot = u.dot(v)
+  const cross = new THREE.Vector3().crossVectors(u, v)
+  const crossLength = cross.length()
+  if (crossLength === 0) {
+    return 0;
+  }
+  const cotangent = dot / crossLength
+  return cotangent;
+}
 // ----------- STUDENT CODE END ------------
 
 // Translate all selected vertices in the mesh by the given x,y,z offsets.
@@ -165,10 +198,20 @@ Filters.smooth = function(mesh, iter, delta, curvFlow, scaleDep, implicit) {
       let neighbors = mesh.verticesOnVertex(verts[j])
 
       let averagePosition = new THREE.Vector3(0, 0, 0)
-      for (let neighbor of neighbors) {
-        averagePosition.add(neighbor.position)
+      let weight = 0
+      if (!curvFlow) {
+        for (let neighbor of neighbors) {
+          averagePosition.add(neighbor.position)
+        }
+        weight = neighbors.length
+      } else {
+        for (let neighbor of neighbors) {
+          let w = cotangentWeightCalculation(verts[j], neighbor, mesh)
+          averagePosition.addScaledVector(neighbor.position, w) // the weight times the vertices of the neighbors
+          weight += w
+        }        
       }
-      averagePosition.divideScalar(neighbors.length)
+      averagePosition.divideScalar(weight)
       let direction = new THREE.Vector3(
         averagePosition.x - verts[j].position.x,
         averagePosition.y - verts[j].position.y,
@@ -190,9 +233,26 @@ Filters.sharpen = function(mesh, iter, delta) {
   const verts = mesh.getModifiableVertices();
 
   // ----------- STUDENT CODE BEGIN ------------
-  // ----------- Our reference solution uses 9 lines of code.
+  for (let i = 0; i < iter; i++) {
+    for (let j = 0; j < verts.length; j++) {
+      let neighbors = mesh.verticesOnVertex(verts[j])
+
+      let averagePosition = new THREE.Vector3(0, 0, 0)
+      for (let neighbor of neighbors) {
+        averagePosition.add(neighbor.position)
+      }
+      averagePosition.divideScalar(neighbors.length)
+      let direction = new THREE.Vector3(
+        verts[j].position.x - averagePosition.x,
+        verts[j].position.y - averagePosition.y,
+        verts[j].position.z - averagePosition.z
+      ).multiplyScalar(delta)
+
+      verts[j].position.copy(verts[j].position.clone().add(direction))
+    }
+  }
   // ----------- STUDENT CODE END ------------
-  Gui.alertOnce("Sharpen is not implemented yet");
+  //Gui.alertOnce("Sharpen is not implemented yet");
   mesh.calculateFacesArea();
   mesh.updateNormals();
 };
