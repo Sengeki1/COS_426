@@ -61,7 +61,7 @@ function cotangent(p1, p2, p3) {
   if (crossLength === 0) {
     return 0;
   }
-  const cotangent = dot / crossLength
+  const cotangent = dot / Math.abs(crossLength)
   return cotangent;
 }
 // ----------- STUDENT CODE END ------------
@@ -199,6 +199,18 @@ Filters.smooth = function(mesh, iter, delta, curvFlow, scaleDep, implicit) {
 
       let averagePosition = new THREE.Vector3(0, 0, 0)
       let weight = 0
+      let areaSum = 0
+
+      if (scaleDep) {
+        let adjacent = mesh.facesOnVertex(verts[j])
+        for (let face of adjacent) {
+          let area = mesh.calculateFaceArea(face)
+          areaSum += area
+        }
+      }
+      if(implicit) {
+
+      }
       if (!curvFlow) {
         for (let neighbor of neighbors) {
           averagePosition.add(neighbor.position)
@@ -212,13 +224,23 @@ Filters.smooth = function(mesh, iter, delta, curvFlow, scaleDep, implicit) {
         }        
       }
       averagePosition.divideScalar(weight)
-      let direction = new THREE.Vector3(
-        averagePosition.x - verts[j].position.x,
-        averagePosition.y - verts[j].position.y,
-        averagePosition.z - verts[j].position.z
-      ).multiplyScalar(delta)
-
-      verts[j].position = verts[j].position.add(direction)
+      if (!scaleDep) {
+        let direction = new THREE.Vector3(
+          averagePosition.x - verts[j].position.x,
+          averagePosition.y - verts[j].position.y,
+          averagePosition.z - verts[j].position.z
+        ).multiplyScalar(delta)
+        
+        verts[j].position = verts[j].position.add(direction)
+      } else {
+        let direction = new THREE.Vector3(
+          averagePosition.x - verts[j].position.x,
+          averagePosition.y - verts[j].position.y,
+          averagePosition.z - verts[j].position.z
+        ).multiplyScalar((delta / areaSum))
+        
+        verts[j].position = verts[j].position.add(direction)
+      }
     }
   }
   // ----------- STUDENT CODE END ------------
