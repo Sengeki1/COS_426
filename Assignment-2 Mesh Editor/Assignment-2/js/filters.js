@@ -64,6 +64,114 @@ function cotangent(p1, p2, p3) {
   const cotangent = dot / Math.abs(crossLength)
   return cotangent;
 }
+
+function distanceTo(vertex1, vertex2) {
+  const dx = vertex2.x - vertex1.x;
+  const dy = vertex2.y - vertex1.y;
+  const dz = vertex2.z - vertex1.z;
+
+  // Calculate the Euclidean distance
+  const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+  return distance;
+}
+
+// Function to compute principal curvatures for a vertex using Euler operations
+function computePrincipalCurvatures(vertex, mesh) {
+  const edgeLengths = [];
+  const dihedralAngles = [];
+
+  // Iterate over the halfedges incident to the vertex
+  let startHalfedge = vertex.halfedge;
+  let halfedge = startHalfedge;
+  const visitedHalfedges = new Set();
+  
+  while (halfedge && !visitedHalfedges.has(halfedge)) {
+    visitedHalfedges.add(halfedge);
+
+    // Access the start and end vertices of the edge
+    const v1 = halfedge.vertex.position;
+    const v2 = halfedge.opposite.vertex.position;
+
+    // Compute the length of the edge
+    const edgeLength = distanceTo(v1, v2);
+    edgeLengths.push(edgeLength);
+
+    // Compute the dihedral angle for adjacent faces
+    const dihedralAngle = computeDihedralAngle(halfedge, mesh);
+    dihedralAngles.push(dihedralAngle);
+
+    // Move to the next halfedge incident to the vertex
+    halfedge = halfedge.opposite ? halfedge.opposite.next : null;
+
+    // If we return to the starting halfedge, we should stop
+    if (halfedge === startHalfedge) {
+      break;
+    }
+  }
+
+  // Estimate principal curvatures using edge lengths and dihedral angles
+  const principalCurvatures = estimateCurvature(edgeLengths, dihedralAngles);
+
+  // Return the computed principal curvatures
+  return principalCurvatures;
+}
+
+// Function to compute the dihedral angle between adjacent faces incident to an edge
+function computeDihedralAngle(edge, mesh) {
+  // Find the two adjacent faces sharing the edge
+  const face1 = edge.face;
+  const face2 = edge.opposite.face;
+
+  // Assuming the mesh is triangular, get the normal vectors of the faces
+  const normal1 = mesh.calculateFaceNormal(face1);
+  const normal2 = mesh.calculateFaceNormal(face2);
+
+  // Compute the angle between the normal vectors using dot product
+  const dotProduct = normal1.dot(normal2);
+  const angle = Math.acos(Math.min(Math.max(dotProduct, -1), 1)); // Ensure the value is within [-1, 1] for safe acos
+
+  return angle;
+}
+
+// Function to estimate principal curvatures using edge lengths and dihedral angles
+function estimateCurvature(edgeLengths, dihedralAngles) {
+  const meanEdgeLength = edgeLengths.reduce((acc, val) => acc + val, 0) / edgeLengths.length;
+  const meanDihedralAngle = dihedralAngles.reduce((acc, val) => acc + val, 0) / dihedralAngles.length;
+
+  // Estimate curvature based on linear and quadratic relationships
+  const linearTerm = 1 / meanEdgeLength; // Linear term based on inverse of mean edge length
+  const quadraticTerm = Math.pow(meanDihedralAngle, 2); // Quadratic term based on squared mean dihedral angle
+
+  // Combine linear and quadratic terms to estimate curvature
+  const curvature = linearTerm + quadraticTerm;
+
+  return curvature;
+}
+
+function mapCurvatureToColor(curvature) {
+  const lowCurvatureColor = [0, 255, 255]; // Blue
+  const highCurvatureColor = [255, 0, 255]; // Red
+
+  const minCurvature = -1; // Minimum possible curvature value
+  const maxCurvature = 1; // Maximum possible curvature value
+
+  // Map the curvature value to a color within the defined range
+  const mappedColor = [];
+
+  for (let i = 0; i < 3; i++) {
+    const lowColorComponent = lowCurvatureColor[i];
+    const highColorComponent = highCurvatureColor[i];
+    
+    // Linearly interpolate between low and high color components based on curvature value
+    const colorComponent = lowColorComponent + (curvature - minCurvature) * (highColorComponent - lowColorComponent) / (maxCurvature - minCurvature);
+    
+    // Ensure the color component is within the valid range [0, 255]
+    mappedColor[i] = Math.min(255, Math.max(0, Math.round(colorComponent)));
+  }
+
+  return mappedColor;
+}
 // ----------- STUDENT CODE END ------------
 
 // Translate all selected vertices in the mesh by the given x,y,z offsets.
@@ -138,9 +246,16 @@ Filters.scale = function(mesh, s) {
 // (the precise mapping of curvature to color is left to you)
 Filters.curvature = function(mesh) {
   // ----------- STUDENT CODE BEGIN ------------
-  // ----------- Our reference solution uses 102 lines of code.
+  const vertices = mesh.getModifiableVertices();
+  for (let vertex of vertices) {
+    console.log(vertex)
+    const principalCurvatures = computePrincipalCurvatures(vertex, mesh)
+    const gaussianCurvature = principalCurvatures[0] * principalCurvatures[1]
+    const vertexColor = mapCurvatureToColor(gaussianCurvature)
+    vertex.color = vertexColor
+  }
   // ----------- STUDENT CODE END ------------
-  Gui.alertOnce("Curvature is not implemented yet");
+  //Gui.alertOnce("Curvature is not implemented yet");
 };
 
 // Apply a random offset to each selected vertex in the direction of its normal
@@ -152,9 +267,7 @@ Filters.noise = function(mesh, factor) {
   // ----------- STUDENT CODE BEGIN ------------
   for (let i = 0; i < verts.length; i++) {
     const avgEdgeLength = mesh.averageEdgeLength(verts[i])
-    // Generate a random value in the range [-1, 1)
-    let randomValue = Math.random() * 2 - 1
-    // Offset the vertex position
+    let randomValue = Math.random() * 2 - 1 // Generate a random value in the range [-1, 1)
     let offset = verts[i].normal.clone().multiplyScalar(randomValue * avgEdgeLength * factor)
     verts[i].position.add(offset)
   }
@@ -378,9 +491,24 @@ Filters.triangulate = function(mesh) {
   const faces = mesh.getModifiableFaces();
 
   // ----------- STUDENT CODE BEGIN ------------
-  // ----------- Our reference solution uses 4 lines of code.
+  faces.forEach(face => {
+    if (face.halfedge && mesh.edgesOnFace(face).length > 3) {
+      console.log(face)
+      mesh.triangulateFace(face);
+    }
+  });
+
+  // Compute principal curvatures for each vertex
+  const vertices = mesh.getModifiableVertices();
+  vertices.forEach(vertex => {
+    // Compute principal curvatures for the vertex
+    const principalCurvatures = computePrincipalCurvatures(vertex, mesh);
+
+    // Store the computed principal curvatures in the vertex
+    vertex.curvature = principalCurvatures;
+  });
   // ----------- STUDENT CODE END ------------
-  Gui.alertOnce("triangulate is not implemented yet");
+  //Gui.alertOnce("triangulate is not implemented yet");
 
   mesh.calculateFacesArea();
   mesh.updateNormals();

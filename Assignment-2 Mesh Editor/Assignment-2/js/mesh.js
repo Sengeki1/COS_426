@@ -26,12 +26,12 @@ Mesh.prototype.edgesOnFace = function(f) {
   const halfedges = [];
 
   // ----------- STUDENT CODE BEGIN ------------
-  let startEdge = f.halfedge
-  let currentEdge = startEdge
+  let startEdge = f.halfedge;
+  let currentEdge = startEdge;
   do {
-    halfedges.push(currentEdge)
-    currentEdge = currentEdge.next
-  } while (currentEdge !== startEdge)
+    halfedges.push(currentEdge);
+    currentEdge = currentEdge.next;
+  } while (currentEdge.next !== startEdge);
   // ----------- STUDENT CODE END ------------
 
   return halfedges;
@@ -254,6 +254,27 @@ Mesh.prototype.averageEdgeLength = function(v) {
 // split that face so it consists only of several triangular faces. 
 Mesh.prototype.triangulateFace = function(f) {
   // ----------- STUDENT CODE BEGIN ------------
-  // ----------- Our reference solution uses 8 lines of code.
+  const halfedges = this.edgesOnFace(f);
+
+  // Check if the face is already triangular
+  if (halfedges.length === 3) {
+    return; 
+  }
+  const startVertex = halfedges[0].vertex;
+
+  // Iterate over the remaining vertices of the face to create triangles
+  for (let i = 1; i < halfedges.length - 1; i++) {
+    const v2 = halfedges[i].vertex;
+    const v3 = halfedges[i + 1].vertex;
+
+    // Create a new triangle face using the start vertex and the current pair of vertices
+    const newFace = this.addFace();
+    this.addHalfEdge(startVertex, v2, newFace);
+    this.addHalfEdge(v2, v3, newFace);
+    this.addHalfEdge(v3, startVertex, newFace);
+  }
+
+  // Remove the original face from the mesh
+  this.removeFace(f);
   // ----------- STUDENT CODE END ------------
 };
