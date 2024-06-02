@@ -193,53 +193,94 @@ Filters.smooth = function(mesh, iter, delta, curvFlow, scaleDep, implicit) {
   const verts = mesh.getModifiableVertices();
 
   // ----------- STUDENT CODE BEGIN ------------
+  const n = verts.length
   for (let i = 0; i < iter; i++) {
-    for (let j = 0; j < verts.length; j++) {
-      let neighbors = mesh.verticesOnVertex(verts[j])
+    if (implicit) {
+      // Implicit smoothing setup
+      const M = new Array(n).fill(0).map(() => 1);  // Assuming uniform mass
+      const L = new Array(n).fill().map(() => new Array(n).fill(0));
+      const I = new Array(n).fill().map((_, idx) => {
+        const row = new Array(n).fill(0);
+        row[idx] = 1;
+        return row;
+      });
 
-      let averagePosition = new THREE.Vector3(0, 0, 0)
-      let weight = 0
-      let areaSum = 0
+      for (let j = 0; j < n; j++) {
+        let neighbors = mesh.verticesOnVertex(verts[j]);
+        let weightSum = 0;
+        
+        for (let neighbor of neighbors) {
+          const k = verts.indexOf(neighbor);
+          L[j][k] = -1;
+          weightSum += 1;
+        }
+        L[j][j] = weightSum;
 
-      if (scaleDep) {
-        let adjacent = mesh.facesOnVertex(verts[j])
-        for (let face of adjacent) {
-          let area = mesh.calculateFaceArea(face)
-          areaSum += area
+        const A = new Array(n).fill().map(() => new Array(n).fill(0));
+        for (let k = 0; k < n; k++) {
+          A[j][k] = I[j][k] - delta * M[j] * L[j][k];
         }
       }
-      if(implicit) {
+      
+      // Step 3: Decompose A using LU decomposition
+      const { L: Lmatrix, U: Umatrix, P: Pmatrix } = math.lup(A);
 
-      }
-      if (!curvFlow) {
-        for (let neighbor of neighbors) {
-          averagePosition.add(neighbor.position)
+      // Step 4: Solve for new positions using LU decomposition
+      for (let axis of ['x', 'y', 'z']) {
+        const b = verts.map(v => v.position[axis]);
+        const Pb = math.multiply(Pmatrix, b);
+        const y = math.lsolve(Lmatrix, Pb);
+        const newPos = math.usolve(Umatrix, y);
+
+        for (let j = 0; j < n; j++) {
+          verts[j].position[axis] = newPos[j];
         }
-        weight = neighbors.length
-      } else {
-        for (let neighbor of neighbors) {
-          let w = cotangentWeightCalculation(verts[j], neighbor, mesh)
-          averagePosition.addScaledVector(neighbor.position, w) // the weight times the vertices of the neighbors
-          weight += w
-        }        
       }
-      averagePosition.divideScalar(weight)
-      if (!scaleDep) {
+    } else {
+      // Explicit smoothing
+      for (let j = 0; j < verts.length; j++) {
+        let neighbors = mesh.verticesOnVertex(verts[j]);
+        let averagePosition = new THREE.Vector3(0, 0, 0);
+        let weight = 0;
+        let areaSum = 0;
+
+        if (scaleDep) {
+          let adjacent = mesh.facesOnVertex(verts[j]);
+          for (let face of adjacent) {
+            let area = mesh.calculateFaceArea(face);
+            areaSum += area;
+          }
+        }
+
+        if (!curvFlow) {
+          for (let neighbor of neighbors) {
+            averagePosition.add(neighbor.position);
+          }
+          weight = neighbors.length;
+        } else {
+          for (let neighbor of neighbors) {
+            let w = cotangentWeightCalculation(verts[j], neighbor, mesh);
+            averagePosition.addScaledVector(neighbor.position, w);
+            weight += w;
+          }
+        }
+
+        averagePosition.divideScalar(weight);
         let direction = new THREE.Vector3(
           averagePosition.x - verts[j].position.x,
           averagePosition.y - verts[j].position.y,
           averagePosition.z - verts[j].position.z
-        ).multiplyScalar(delta)
-        
-        verts[j].position = verts[j].position.add(direction)
-      } else {
-        let direction = new THREE.Vector3(
-          averagePosition.x - verts[j].position.x,
-          averagePosition.y - verts[j].position.y,
-          averagePosition.z - verts[j].position.z
-        ).multiplyScalar((delta / areaSum))
-        
-        verts[j].position = verts[j].position.add(direction)
+        );
+
+        if (scaleDep) {
+          let adjacent = mesh.facesOnVertex(verts[j]);
+          const A = areaSum / adjacent.length;
+          direction.multiplyScalar(delta * (areaSum / A));
+        } else {
+          direction.multiplyScalar(delta);
+        }
+
+        verts[j].position.copy(verts[j].position.clone().add(direction));
       }
     }
   }
