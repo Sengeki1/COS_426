@@ -26,12 +26,16 @@ Mesh.prototype.edgesOnFace = function(f) {
   const halfedges = [];
 
   // ----------- STUDENT CODE BEGIN ------------
-  let startEdge = f.halfedge;
-  let currentEdge = startEdge;
-  do {
-    halfedges.push(currentEdge);
-    currentEdge = currentEdge.next;
-  } while (currentEdge.next !== startEdge);
+  let first = f.halfedge
+  let he = first;
+  while(true)
+  {
+    halfedges.push(he);
+    he = he.next;
+
+    if(first == he)
+      break;
+  }
   // ----------- STUDENT CODE END ------------
 
   return halfedges;
@@ -71,11 +75,16 @@ Mesh.prototype.verticesOnVertex = function(v) {
 
   // Traverse around the vertex v to collect all neighboring vertices
   do {
-    // Get the vertex pointed to by the current half-edge
-    vertices.push(currentHalfEdge.vertex);
-
-    // Move to the next half-edge around the vertex
+    // Move to the twin half-edge to get the outgoing half-edge from the neighboring vertex
     currentHalfEdge = currentHalfEdge.next;
+
+    // Get the vertex pointed to by the current half-edge
+    const neighborVertex = currentHalfEdge.vertex;
+
+    if (neighborVertex !== v) { // Make sure not to include the vertex itself
+      vertices.push(neighborVertex);
+    }
+
   } while (currentHalfEdge !== startHalfEdge);
   // ----------- STUDENT CODE END ------------
   return vertices;
@@ -86,14 +95,17 @@ Mesh.prototype.edgesOnVertex = function(v) {
   const halfedges = [];
 
   // ----------- STUDENT CODE BEGIN ------------
-  let startHalfEdge = v.halfedge;
-  let currentHalfEdge = startHalfEdge;
+  let first = he = v.halfedge;
+  while(true)
+  {
+    if(halfedges.includes(he))
+      break
+    halfedges.push(he);
+    he = he.opposite.next;
 
-  // Traverse around the vertex v to collect all outgoing halfedges
-  do {
-    halfedges.push(currentHalfEdge.halfedge);
-    currentHalfEdge = currentHalfEdge.next;
-  } while (currentHalfEdge !== startHalfEdge);
+    if(first == he)
+      break;
+  }
   // ----------- STUDENT CODE END ------------
 
   return halfedges;
@@ -139,7 +151,15 @@ Mesh.prototype.facesOnEdge = function(e) {
 Mesh.prototype.edgeBetweenVertices = function(v1, v2) {
   let out_he = undefined;
   // ----------- STUDENT CODE BEGIN ------------
-  // ----------- Our reference solution uses 11 lines of code.
+  halfedges = this.edgesOnVertex(v1);
+  for(let halfedge of halfedges)
+  {
+    if (halfedge.vertex == v2)
+    {
+      out_he = halfedge;
+      break;
+    }
+  }
   // ----------- STUDENT CODE END ------------
   return out_he;
 };

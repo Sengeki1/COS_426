@@ -172,6 +172,15 @@ function mapCurvatureToColor(curvature) {
 
   return mappedColor;
 }
+
+function getCommonFace(v1, v2, mesh) {
+  let face1 = mesh.facesOnVertex(v1);
+  let face2 = mesh.facesOnVertex(v2);
+
+  for (let face of face2) {
+    if (face1.includes(face)) return face;
+  }
+}
 // ----------- STUDENT CODE END ------------
 
 // Translate all selected vertices in the mesh by the given x,y,z offsets.
@@ -248,7 +257,6 @@ Filters.curvature = function(mesh) {
   // ----------- STUDENT CODE BEGIN ------------
   const vertices = mesh.getModifiableVertices();
   for (let vertex of vertices) {
-    console.log(vertex)
     const principalCurvatures = computePrincipalCurvatures(vertex, mesh)
     const gaussianCurvature = principalCurvatures[0] * principalCurvatures[1]
     const vertexColor = mapCurvatureToColor(gaussianCurvature)
@@ -599,12 +607,48 @@ Filters.joinFaces = function(mesh) {
 // vector, scaled by the provided factor.
 // See the spec for more detail.
 Filters.extrude = function(mesh, factor) {
-  const faces = mesh.getModifiableFaces();
+  const _faces = mesh.getModifiableFaces();
 
   // ----------- STUDENT CODE BEGIN ------------
-  // ----------- Our reference solution uses 32 lines of code.
+  let faces = [..._faces];
+  for(let face of faces)
+    {
+      let halfedges = mesh.edgesOnFace(face);
+      console.log(halfedges)
+      let new_verts = [];
+      
+      for(let i=0; i < halfedges.length; i++)
+      {
+        let new_vert = mesh.splitEdgeMakeVert(halfedges[i].vertex,
+        halfedges[i].opposite.vertex, 0);
+        
+        let adj_face = new_vert.halfedge.opposite.face;
+        
+        mesh.splitFaceMakeEdge(adj_face, new_vert.halfedge.vertex, 
+        new_vert.halfedge.opposite.next.vertex);
+        new_verts.push(new_vert);
+      }
+      
+      for(let i = 0; i < new_verts.length; i++)
+      {
+        mesh.splitFaceMakeEdge(face, new_verts[i], new_verts[(i + 1) % new_verts.length]);
+        
+        mesh.joinFaceKillEdge(
+          new_verts[i].halfedge.opposite.next.next.opposite.face,
+          new_verts[i].halfedge.opposite.face,
+          new_verts[i].halfedge.opposite.next.vertex,
+          new_verts[i].halfedge.vertex
+          );
+      }
+        
+      console.log(faces.length);
+      for(let new_vert of new_verts)
+      {
+          new_vert.position.addScaledVector(face.normal.normalize(), factor);
+      }
+    }
   // ----------- STUDENT CODE END ------------
-  Gui.alertOnce("Extrude is not implemented yet");
+  //Gui.alertOnce("Extrude is not implemented yet");
 
   mesh.calculateFacesArea();
   mesh.updateNormals();
@@ -614,12 +658,53 @@ Filters.extrude = function(mesh, factor) {
 // and replacing them with faces. factor specifies the size of the truncation.
 // See the spec for more detail.
 Filters.truncate = function(mesh, factor) {
-  const verts = mesh.getModifiableVertices();
+  const vertis = mesh.getModifiableVertices();
 
   // ----------- STUDENT CODE BEGIN ------------
-  // ----------- Our reference solution uses 64 lines of code.
+  const meshCopy = new Mesh();
+  meshCopy.copy(mesh);
+
+  // Get the vertices list from the copied mesh
+  const verts = meshCopy.getModifiableVertices();
+  for (let i = 0; i < vertis.length; i++) {
+    const vertex = verts[i];
+    const neighbors = meshCopy.verticesOnVertex(vertex);
+    if (neighbors.length < 3) {
+      continue;
+    }
+
+    // Calculate new vertices along each edge
+    const newVertices = [];
+    for (let j = 0; j < neighbors.length; j++) {
+      const neighbor = neighbors[j];
+      const newVertex = meshCopy.splitEdgeMakeVert(vertex, neighbor, factor);
+      if (newVertex === false) {
+        return;
+      }
+      newVertices.push(newVertex);
+    }
+    // Create new faces to truncate the corner
+    const numNeighbors = neighbors.length;
+    for (let j = 0; j < numNeighbors - 1; j++) {
+      const v1 = newVertices[j];
+      const v2 = newVertices[j + 1];
+
+      // Create a new face with vertices v1, v2, and the original vertex
+      const face = getCommonFace(v1, v2, meshCopy)
+      const newFace = meshCopy.splitFaceMakeEdge(face, v1, v2, undefined, false);
+      if (!newFace) {
+        return;
+      }
+    }
+  }
+  mesh.clear();
+  mesh.copy(meshCopy);
+
+  for (let face of mesh.getModifiableFaces()) {
+    mesh.calculateFaceNormal(face)
+  }
   // ----------- STUDENT CODE END ------------
-  Gui.alertOnce("Truncate is not implemented yet");
+  //Gui.alertOnce("Truncate is not implemented yet");
 
   mesh.calculateFacesArea();
   mesh.updateNormals();
@@ -631,9 +716,26 @@ Filters.bevel = function ( mesh, factor ) {
     var verts = mesh.getModifiableVertices();
 
     // ----------- STUDENT CODE BEGIN ------------
-    // ----------- Our reference solution uses 104 lines of code.
+    // Store original vertices and their truncated counterparts
+    const truncatedVertices = [];
+
+    // Truncate each vertex along the edge
+    for (const vertex of verts) {
+      const newPos = new THREE.Vector3().lerpVectors(vertex, vertex+1, factor);
+      console.log(newPos)
+      const truncatedVertex = mesh.splitEdgeMakeVert(vertex, newPos);
+      truncatedVertices.push(truncatedVertex);
+    }
+    // Create new faces to bevel the edge
+    const face = verts[0].halfedge.face;
+    console.log(face)
+    const newFace = mesh.splitFaceMakeEdge(face, truncatedVertices[0], truncatedVertices[1]);
+    if (!newFace) {
+      console.error(`Failed to split face with vertices ${truncatedVertices[0]}, ${truncatedVertices[1]}`);
+      return;
+    }
     // ----------- STUDENT CODE END ------------
-    Gui.alertOnce ('Bevel is not implemented yet');
+    //Gui.alertOnce ('Bevel is not implemented yet');
 
     mesh.calculateFacesArea();
     mesh.updateNormals();
@@ -644,9 +746,41 @@ Filters.bevel = function ( mesh, factor ) {
 // of the total number of edges in the mesh that should be split.
 Filters.splitLong = function(mesh, factor) {
   // ----------- STUDENT CODE BEGIN ------------
-  // ----------- Our reference solution uses 35 lines of code.
+  const faces = mesh.getModifiableFaces()
+  let edges = []
+  for (let face of faces) {
+    let edge = mesh.edgesOnFace(face)
+    edges.push(edge) 
+  }
+  const totalEdges = edges.length
+  let splits = 0
+
+  while (splits < factor * totalEdges) {
+    // Find the longest edge
+    let longestEdge = null;
+    let maxLengthSquared = 0;
+
+    for (const edge of edges) {
+        const lengthSquared = edge.lengthSquared();
+        if (lengthSquared > maxLengthSquared) {
+            maxLengthSquared = lengthSquared;
+            longestEdge = edge;
+        }
+    }
+
+    // Split the longest edge
+    const midpoint = longestEdge.midpoint();
+    const v = mesh.splitEdgeMakeVert(longestEdge.vertex1, longestEdge.vertex2, 0.5);
+
+    // Increment split count
+    splits++;
+
+    // Update edges
+    edges.push(longestEdge.halfedge.opposite.edge);
+    edges.push(longestEdge.halfedge.edge);
+  }
   // ----------- STUDENT CODE END ------------
-  Gui.alertOnce("Split Long Edges is not implemented yet");
+  //Gui.alertOnce("Split Long Edges is not implemented yet");
 
   mesh.calculateFacesArea();
   mesh.updateNormals();
