@@ -658,54 +658,86 @@ Filters.extrude = function(mesh, factor) {
 // and replacing them with faces. factor specifies the size of the truncation.
 // See the spec for more detail.
 Filters.truncate = function(mesh, factor) {
-  const vertis = mesh.getModifiableVertices();
-
+  const _verts = mesh.getModifiableVertices(); 
+  let verts = [..._verts];
   // ----------- STUDENT CODE BEGIN ------------
-  const meshCopy = new Mesh();
-  meshCopy.copy(mesh);
-
-  // Get the vertices list from the copied mesh
-  const verts = meshCopy.getModifiableVertices();
-  for (let i = 0; i < vertis.length; i++) {
-    const vertex = verts[i];
-    const neighbors = meshCopy.verticesOnVertex(vertex);
-    if (neighbors.length < 3) {
-      continue;
-    }
-
-    // Calculate new vertices along each edge
-    const newVertices = [];
-    for (let j = 0; j < neighbors.length; j++) {
-      const neighbor = neighbors[j];
-      const newVertex = meshCopy.splitEdgeMakeVert(vertex, neighbor, factor);
-      if (newVertex === false) {
-        return;
-      }
-      newVertices.push(newVertex);
-    }
-    // Create new faces to truncate the corner
-    const numNeighbors = neighbors.length;
-    for (let j = 0; j < numNeighbors - 1; j++) {
-      const v1 = newVertices[j];
-      const v2 = newVertices[j + 1];
-
-      // Create a new face with vertices v1, v2, and the original vertex
-      const face = getCommonFace(v1, v2, meshCopy)
-      const newFace = meshCopy.splitFaceMakeEdge(face, v1, v2, undefined, false);
-      if (!newFace) {
-        return;
-      }
-    }
+  let vert_positons = [];
+  for(let vertex of verts)
+  {
+    vert_positons.push(vertex.position.clone());
   }
-  mesh.clear();
-  mesh.copy(meshCopy);
 
-  for (let face of mesh.getModifiableFaces()) {
-    mesh.calculateFaceNormal(face)
+  let vertex_movement_list = [];
+
+  for(let i=0; i < verts.length; i++)
+  {
+      let old_neighbors = mesh.verticesOnVertex(verts[i]);
+      for(let j=0; j < old_neighbors.length - 1; j++)
+      {
+        mesh.setSelectedVertices([verts[i].id, old_neighbors[j].id]);
+        this.splitEdge(mesh);
+      }
+
+      let new_neighbors = new Set(mesh.verticesOnVertex(verts[i]));
+
+      let left_out_old_neighbor = old_neighbors.filter(x => new_neighbors.has(x));
+      let old_neighbors_set = new Set(old_neighbors);
+      let newly_add_neighbors = [...new_neighbors].filter(x => !old_neighbors_set.has(x));
+
+    
+      for(let j=0; j<newly_add_neighbors.length; j++) 
+      {
+        newly_add_neighbors[j].position.set( verts[i].position.x, 
+                                             verts[i].position.y, 
+                                             verts[i].position.z);
+
+        if(newly_add_neighbors[j].halfedge.vertex.id === verts[i].id)
+        {
+          vertex_movement_list.push([newly_add_neighbors[j], 
+                      newly_add_neighbors[j].halfedge.opposite.next.vertex.position.clone()
+                          .sub(newly_add_neighbors[j].position)]);
+        }
+
+        else
+        {
+          vertex_movement_list.push([newly_add_neighbors[j],
+                                    newly_add_neighbors[j].halfedge.vertex.position.clone()
+                                        .sub( newly_add_neighbors[j].position)]);
+
+        }
+      }
+
+      let halfedge_1 = mesh.edgeBetweenVertices(verts[i], newly_add_neighbors[0]);
+      let halfedge_2 = mesh.edgeBetweenVertices(verts[i], newly_add_neighbors[1]);
+      
+      let faces_on_he1 = new Set([halfedge_1.face, halfedge_1.opposite.face]);
+      let faces_on_he2 = new Set([halfedge_2.face, halfedge_2.opposite.face]);
+
+      let common_face = [...faces_on_he1].filter(x=>faces_on_he2.has(x));
+
+      mesh.setSelectedFaces([common_face[0].id]);
+      mesh.setSelectedVertices([newly_add_neighbors[0].id, newly_add_neighbors[1].id]);
+      this.splitFace(mesh);
+
+      let direction_to_move = left_out_old_neighbor[0].position.clone().sub(verts[i].position);
+
+      vert_positons[i].addScaledVector(direction_to_move, factor);
   }
+
+  for(let [v, dir] of vertex_movement_list)
+  {
+    v.position.addScaledVector( dir, factor);
+  }
+  for(let i=0; i < verts.length; i++)
+  {
+    verts[i].position.set(vert_positons[i].x,
+                      vert_positons[i].y,
+                      vert_positons[i].z);
+  }
+  mesh.setSelectedFaces([]);
+  mesh.setSelectedVertices([]);
   // ----------- STUDENT CODE END ------------
-  //Gui.alertOnce("Truncate is not implemented yet");
-
+  //   Gui.alertOnce("Truncate is not implemented yet");
   mesh.calculateFacesArea();
   mesh.updateNormals();
 };
@@ -716,24 +748,51 @@ Filters.bevel = function ( mesh, factor ) {
     var verts = mesh.getModifiableVertices();
 
     // ----------- STUDENT CODE BEGIN ------------
-    // Store original vertices and their truncated counterparts
-    const truncatedVertices = [];
+    this.truncate(mesh, factor);
+    let _faces = mesh.getModifiableFaces();
 
-    // Truncate each vertex along the edge
-    for (const vertex of verts) {
-      const newPos = new THREE.Vector3().lerpVectors(vertex, vertex+1, factor);
-      console.log(newPos)
-      const truncatedVertex = mesh.splitEdgeMakeVert(vertex, newPos);
-      truncatedVertices.push(truncatedVertex);
+    _faces = [..._faces]
+    let faces = [];
+    for(let face of _faces)
+    {
+      if(mesh.verticesOnFace(face).length == 3)
+      {
+        faces.push(face);
+      }
     }
-    // Create new faces to bevel the edge
-    const face = verts[0].halfedge.face;
-    console.log(face)
-    const newFace = mesh.splitFaceMakeEdge(face, truncatedVertices[0], truncatedVertices[1]);
-    if (!newFace) {
-      console.error(`Failed to split face with vertices ${truncatedVertices[0]}, ${truncatedVertices[1]}`);
-      return;
+    
+    let new_verts_face = [];
+    for(let face of faces)
+    {
+      let halfedges = mesh.edgesOnFace(face);
+      for(let he of halfedges)
+      {
+        new_verts_face.push([mesh.splitEdgeMakeVert(he.vertex, he.opposite.vertex, .5), he.opposite.face]);
+      }
     }
+
+    let remove_edge_set = new Set();
+    
+    for(let i = 0; i < new_verts_face.length; i++)
+    {
+      mesh.splitFaceMakeEdge(
+        new_verts_face[i][1],
+        new_verts_face[i][0], 
+        new_verts_face[i][0].halfedge.opposite.next.next.next.vertex
+      );
+
+      remove_edge_set.add(mesh.edgeBetweenVertices(
+        new_verts_face[i][0].halfedge.opposite.next.vertex,
+        new_verts_face[i][0].halfedge.opposite.next.next.vertex)
+      );
+    }
+
+    for(let edge of remove_edge_set) {
+      let v1 = edge.vertex, v2 = edge.opposite.vertex;
+      mesh.joinFaceKillEdge(edge.face, edge.opposite.face, v1, v2);
+      mesh.joinEdgeKillVert(v1.halfedge.vertex, v1, v1.halfedge.opposite.next.vertex)
+    }
+
     // ----------- STUDENT CODE END ------------
     //Gui.alertOnce ('Bevel is not implemented yet');
 

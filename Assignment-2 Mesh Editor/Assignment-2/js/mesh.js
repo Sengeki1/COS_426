@@ -70,22 +70,11 @@ Mesh.prototype.verticesOnVertex = function(v) {
 
   // ----------- STUDENT CODE BEGIN ------------
   // Start from any half-edge that originates from vertex v
-  let startHalfEdge = v.halfedge;
-  let currentHalfEdge = startHalfEdge;
-
-  // Traverse around the vertex v to collect all neighboring vertices
-  do {
-    // Move to the twin half-edge to get the outgoing half-edge from the neighboring vertex
-    currentHalfEdge = currentHalfEdge.next;
-
-    // Get the vertex pointed to by the current half-edge
-    const neighborVertex = currentHalfEdge.vertex;
-
-    if (neighborVertex !== v) { // Make sure not to include the vertex itself
-      vertices.push(neighborVertex);
-    }
-
-  } while (currentHalfEdge !== startHalfEdge);
+  halfedges = this.edgesOnVertex(v);
+  for(let he of halfedges)
+  {
+    vertices.push(he.vertex);
+  }
   // ----------- STUDENT CODE END ------------
   return vertices;
 };
