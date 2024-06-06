@@ -1,0 +1,58 @@
+{"camera":[0.18, -0.22, 0.1],
+ "objects":[
+        {
+            "comment": "// the bottom of the cornell box",
+            "type": "plane",
+            "normal": [0, -1, 0],
+            "dist": 15,
+            "material": {
+                "type": "PHONGMATERIAL",
+                "shininess": 500,
+                "color": [0.7, 0.7, 0.7],
+                "special": "CHECKERBOARD"
+            }
+        },
+        {
+            "comment": "// load a cube using obj file with scale and offset",
+            "type": "mesh",
+            "objfile":"scenes/cube.obj",
+            "scale": 8,
+            "offset":[-15, -3, 5],
+            "material": {
+               
+               "type": "PHONGMATERIAL",
+               "color": [0.6, 0.25, 0.55],
+               "shininess": 1000,
+               "specular": [1, 1, 1],
+               "reflectivity": 1,
+               "reflectType": "MIRRORREFLECT"
+            }
+        },
+        {
+            "comment": "// load a tetrahedron using obj file with scale and offset",
+            "type": "mesh",
+            "objfile":"scenes/tetrahedron.obj",
+            "scale": 12,
+            "offset":[5, -9, 8],
+            "material": {
+                "color": [0.1, 0.5, 0.6]
+            }
+        }
+    ],
+"lights": [
+        {
+            "pos": [-20, 40, -30],
+            "color": [1, 1, 1],
+            "intensity": 80,
+            "attenuate": 1
+        },
+        {
+            "pos": [40, 40, -30],
+            "color": [1, 1, 1],
+            "intensity": 40,
+            "attenuate": 1
+        }
+        
+        
+    ]
+}

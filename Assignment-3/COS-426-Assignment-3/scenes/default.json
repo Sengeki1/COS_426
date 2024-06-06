@@ -1,0 +1,166 @@
+{"objects": [
+        {
+            "comment": "// the back of the cornell box",
+            "type": "plane",
+            "normal": [0, 0, 1],
+            "dist": 40,
+            "material": {
+                "color": [0.2, 0.5, 0.2],
+                "special": "MYSPECIAL"
+            }
+        },
+        {
+            "comment": "// the front of the cornell box",
+            "type": "plane",
+            "normal": [0, 0, -1],
+            "dist": 40,
+            "material": {
+                "color": [0.5, 0.4, 0.1]
+            }
+        },
+        {
+            "comment": "// the right of the cornell box",
+            "type": "plane",
+            "normal": [1, 0, 0],
+            "dist": 40,
+            "material": {
+                "color": [0.1, 0.1, 0.6]
+            }
+        },
+        {
+            "comment": "// the left of the cornell box",
+            "type": "plane",
+            "normal": [-1, 0, 0],
+            "dist": 40,
+            "material": {
+                "color": [0.6, 0.1, 0.1]
+            }
+        },
+        {
+            "comment": "// the top of the cornell box",
+            "type": "plane",
+            "normal": [0, 1, 0],
+            "dist": 35,
+            "material": {
+                "color": [0.3, 0.3, 0.3]
+            }
+        },
+        {
+            "comment": "// the bottom of the cornell box",
+            "type": "plane",
+            "normal": [0, -1, 0],
+            "dist": 30,
+            "material": {
+                "type": "PHONGMATERIAL",
+                "shininess": 500,
+                "color": [0.7, 0.7, 0.7],
+                "special": "CHECKERBOARD"
+            }
+        },
+        {
+            "comment": "// the matt sphere",
+            "type": "sphere",
+            "center": [-4, -22, 20],
+            "radius": 8,
+            "material": {
+                "type": "PHONGMATERIAL",
+                "color": [0.2, 0.4, 0.5],
+                "shininess": 200,
+                "specular": [0.8, 0.8, 0.8]
+            }
+        },
+        {
+            "comment": "// the mirror sphere (for reflection)",
+            "type": "sphere",
+            "center": [15, 2, 20],
+            "radius": 8,
+            "material": {
+                "type": "PHONGMATERIAL",
+                "color": [0.2, 0.2, 0.2],
+                "shininess": 1000,
+                "specular": [1, 1, 1],
+                "reflectivity": 0.8,
+                "reflectType": "MIRRORREFLECT"
+            }
+        },
+        {
+            "comment": "// the glass sphere (for refraction)",
+            "type": "sphere",
+            "center": [-20, -2, 15],
+            "radius": 8,
+            "material": {
+                "type": "PHONGMATERIAL",
+                "color": [0.2, 0.4, 1],
+                "shininess": 1000,
+                "specular": [1, 1, 1],
+                "reflectivity": 1,
+                "reflectType": "GLASSREFLECT"
+            }
+        },
+
+        {
+            "comment": "// the cylinder",
+            "type": "cylinder",
+            "topCenter": [15.0, -6.0, 20.0],
+            "bottomCenter": [15.0, -30.0, 20.0],
+            "radius": 7,
+            "material": {
+                "color": [0.2, 0.4, 0.5],
+                "shininess": 200,
+                "specular": [0.8, 0.8, 0.8],
+                "special": "CHECKERBOARD"
+            }
+        },
+        {
+
+            "comment": "// the cone",
+            "type": "cone",
+            "topCenter": [-3, 10, 16],
+            "bottomCenter": [-3, -5, 16],
+            "radius": 5,
+            "material": {
+                "type": "PHONGMATERIAL",
+                "color": [0.2, 0.4, 0.5],
+                "shininess": 200,
+                "specular": [0.8, 0.8, 0.8],
+                "reflectType": "NONEREFLECT"
+            }
+        },
+        {
+            "type": "box",
+            "minCorner": [-25, -30, 10],
+            "maxCorner": [-15, -10, 20],
+            "material": {
+                "color": [0.3, 0.4, 0.4]
+            }
+        }
+
+    ],
+
+    "lights": [
+        {
+            "pos": [-20, 20, 10],
+            "color": [1, 1, 1],
+            "intensity": 50,
+            "attenuate": 1.5
+        },
+        {
+            "pos": [20, 20, 10],
+            "color": [1, 1, 1],
+            "intensity": 30,
+            "attenuate": 2
+        },
+        {
+            "pos": [-10, 20, -20],
+            "color": [1, 1, 1],
+            "intensity": 30,
+            "attenuate": 1
+        },
+        {
+            "pos": [10, 20, -20],
+            "color": [1, 1, 1],
+            "intensity": 20,
+            "attenuate": 1
+        }
+    ]
+}
