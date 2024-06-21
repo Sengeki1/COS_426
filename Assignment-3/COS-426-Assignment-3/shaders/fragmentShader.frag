@@ -114,8 +114,35 @@ bool chooseCloserIntersection(float dist, inout float best_dist,
 
 // put any general convenience functions you want up here
 // ----------- STUDENT CODE BEGIN ------------
-// ----------- Our reference solution uses 118 lines of code.
+
+// Function to compute the dot product between two vectors
+float dotProduct(vec3 a, vec3 b) {
+    return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+
+// Function to compute the length of a vector
+float length(vec3 v) {
+    return sqrt(dotProduct(v, v));
+}
+
+// Function to normalize a vector
+vec3 normalize(vec3 v) {
+    float len = length(v);
+    return vec3(v.x / len, v.y / len, v.z / len);
+}
+
+// Function to reflect a vector around a normal
+vec3 reflect(vec3 incident, vec3 normal) {
+    return incident - 2.0 * dot(incident, normal) * normal;
+}
+
+// Function to mix two colors
+vec3 mixColors(vec3 color1, vec3 color2, float ratio) {
+    return color1 * ratio + color2 * (1.0 - ratio);
+}
+
 // ----------- STUDENT CODE END ------------
+
 
 // forward declaration
 float rayIntersectScene(Ray ray, out Material out_mat,
@@ -143,53 +170,191 @@ float findIntersectionWithPlane(Ray ray, vec3 norm, float dist,
 // Triangle
 float findIntersectionWithTriangle(Ray ray, vec3 t1, vec3 t2, vec3 t3,
                                    out Intersection intersect) {
-  // ----------- STUDENT CODE BEGIN ------------
-  // ----------- Our reference solution uses 28 lines of code.
-  // currently reports no intersection
-  return INFINITY;
-  // ----------- STUDENT CODE END ------------
+    vec3 edge1 = t2 - t1;
+    vec3 edge2 = t3 - t1;
+    vec3 pvec = cross(ray.direction, edge2);
+    float det = dot(edge1, pvec);
+
+    // Ray and triangle are parallel if det is close to 0
+    if (abs(det) < EPS) {
+        return INFINITY;
+    }
+
+    float invDet = 1.0 / det;
+    vec3 tvec = ray.origin - t1;
+    float u = dot(tvec, pvec) * invDet;
+
+    // u is outside the range [0, 1], so no intersection
+    if (u < 0.0 || u > 1.0) {
+        return INFINITY;
+    }
+
+    vec3 qvec = cross(tvec, edge1);
+    float v = dot(ray.direction, qvec) * invDet;
+
+    // v is outside the range [0, 1], so no intersection
+    if (v < 0.0 || u + v > 1.0) {
+        return INFINITY;
+    }
+
+    float t = dot(edge2, qvec) * invDet;
+
+    if (t > EPS) {
+        intersect.position = rayGetOffset(ray, t);
+        intersect.normal = normalize(cross(edge1, edge2));
+        return t;
+    }
+
+    return INFINITY;
 }
 
 // Sphere
 float findIntersectionWithSphere(Ray ray, vec3 center, float radius,
                                  out Intersection intersect) {
-  // ----------- STUDENT CODE BEGIN ------------
-  // ----------- Our reference solution uses 25 lines of code.
-  // currently reports no intersection
-  return INFINITY;
-  // ----------- STUDENT CODE END ------------
+    vec3 oc = ray.origin - center;
+    float a = dot(ray.direction, ray.direction);
+    float b = 2.0 * dot(oc, ray.direction);
+    float c = dot(oc, oc) - radius * radius;
+    float discriminant = b * b - 4.0 * a * c;
+
+    // Se o discriminante for negativo, não há interseção
+    if (discriminant < 0.0) {
+        return INFINITY;
+    }
+
+    float sqrtDiscriminant = sqrt(discriminant);
+    float t1 = (-b - sqrtDiscriminant) / (2.0 * a);
+    float t2 = (-b + sqrtDiscriminant) / (2.0 * a);
+
+    // Verificar se as interseções estão na direção do raio
+    if (t1 > EPS || t2 > EPS) {
+        float t = min(t1, t2);
+        intersect.position = rayGetOffset(ray, t);
+        intersect.normal = normalize(intersect.position - center);
+        return t;
+    }
+
+    return INFINITY;
 }
 
 // Box
 float findIntersectionWithBox(Ray ray, vec3 pmin, vec3 pmax,
                               out Intersection out_intersect) {
-  // ----------- STUDENT CODE BEGIN ------------
-  // pmin and pmax represent two bounding points of the box
-  // pmin stores [xmin, ymin, zmin] and pmax stores [xmax, ymax, zmax]
-  // ----------- Our reference solution uses 44 lines of code.
-  // currently reports no intersection
-  return INFINITY;
-  // ----------- STUDENT CODE END ------------
+    vec3 tmin = (pmin - ray.origin) / ray.direction;
+    vec3 tmax = (pmax - ray.origin) / ray.direction;
+
+    vec3 t1 = min(tmin, tmax);
+    vec3 t2 = max(tmin, tmax);
+
+    float tmin_max = max(max(t1.x, t1.y), t1.z);
+    float tmax_min = min(min(t2.x, t2.y), t2.z);
+
+    // Se o intervalo mínimo máximo for maior que o intervalo máximo mínimo, não há interseção
+    if (tmin_max > tmax_min) {
+        return INFINITY;
+    }
+
+    // Verificar se o intervalo mínimo máximo é maior que zero
+    float t = (tmin_max > 0.0) ? tmin_max : tmax_min;
+
+    if (t < EPS) {
+        return INFINITY;
+    }
+
+    vec3 intersection_point = ray.origin + t * ray.direction;
+
+    // Verificar se o ponto de interseção está dentro da caixa
+    if (intersection_point.x < pmin.x - EPS || intersection_point.x > pmax.x + EPS ||
+        intersection_point.y < pmin.y - EPS || intersection_point.y > pmax.y + EPS ||
+        intersection_point.z < pmin.z - EPS || intersection_point.z > pmax.z + EPS) {
+        return INFINITY;
+    }
+
+    out_intersect.position = intersection_point;
+
+    // Calcular a normal da face mais próxima
+    vec3 d = normalize(ray.direction);
+    vec3 normal = -sign(d) * step(t1, t2);
+    out_intersect.normal = normal;
+
+    return t;
 }
 
 // Cylinder
 float getIntersectOpenCylinder(Ray ray, vec3 center, vec3 axis, float len,
                                float rad, out Intersection intersect) {
-  // ----------- STUDENT CODE BEGIN ------------
-  // ----------- Our reference solution uses 33 lines of code.
-  // currently reports no intersection
-  return INFINITY;
-  // ----------- STUDENT CODE END ------------
+    // Transformar o raio para o sistema de coordenadas do cilindro
+    vec3 oc = ray.origin - center;
+    vec3 oc_axis = cross(oc, axis);
+    vec3 d_axis = cross(ray.direction, axis);
+
+    float a = dot(d_axis, d_axis);
+    float b = 2.0 * dot(d_axis, oc_axis);
+    float c = dot(oc_axis, oc_axis) - rad * rad;
+
+    // Resolver a equação quadrática
+    float discriminant = b * b - 4.0 * a * c;
+
+    if (discriminant < 0.0) {
+        return INFINITY; // Não há interseção
+    }
+
+    float sqrt_discriminant = sqrt(discriminant);
+    float t1 = (-b - sqrt_discriminant) / (2.0 * a);
+    float t2 = (-b + sqrt_discriminant) / (2.0 * a);
+
+    // Verificar se a interseção está dentro do cilindro
+    vec3 p1 = ray.origin + t1 * ray.direction;
+    vec3 p2 = ray.origin + t2 * ray.direction;
+
+    float t = INFINITY;
+    vec3 intersection_point;
+
+    if (t1 >= 0.0 && t1 <= len && p1.y >= center.y && p1.y <= center.y + len) {
+        t = t1;
+        intersection_point = p1;
+    } else if (t2 >= 0.0 && t2 <= len && p2.y >= center.y && p2.y <= center.y + len) {
+        t = t2;
+        intersection_point = p2;
+    } else {
+        return INFINITY; // Não há interseção dentro do cilindro
+    }
+
+    intersect.position = intersection_point;
+
+    // Calcular a normal no ponto de interseção
+    vec3 normal = normalize(intersection_point - center - axis * dot(intersection_point - center, axis));
+    intersect.normal = normal;
+
+    return t;
 }
 
+// Disc
 float getIntersectDisc(Ray ray, vec3 center, vec3 norm, float rad,
                        out Intersection intersect) {
-  // ----------- STUDENT CODE BEGIN ------------
-  // ----------- Our reference solution uses 18 lines of code.
-  // currently reports no intersection
-  return INFINITY;
-  // ----------- STUDENT CODE END ------------
+    // Verificar se o raio é paralelo ao plano do disco
+    float denom = dot(norm, ray.direction);
+    if (abs(denom) < EPS) {
+        return INFINITY; // Raio é paralelo ao plano do disco
+    }
+
+    // Calcular o parâmetro de distância do ponto de interseção ao longo do raio
+    float t = dot(center - ray.origin, norm) / denom;
+
+    // Verificar se a interseção está dentro do disco
+    vec3 intersection_point = ray.origin + t * ray.direction;
+    vec3 v = intersection_point - center;
+    float dist_squared = dot(v, v);
+    if (dist_squared > rad * rad) {
+        return INFINITY; // Interseção está fora do disco
+    }
+
+    intersect.position = intersection_point;
+    intersect.normal = norm;
+
+    return t;
 }
+
 
 float findIntersectionWithCylinder(Ray ray, vec3 center, vec3 apex,
                                    float radius,
@@ -217,11 +382,50 @@ float findIntersectionWithCylinder(Ray ray, vec3 center, vec3 apex,
 // Cone
 float getIntersectOpenCone(Ray ray, vec3 apex, vec3 axis, float len,
                            float radius, out Intersection intersect) {
-  // ----------- STUDENT CODE BEGIN ------------
-  // ----------- Our reference solution uses 45 lines of code.
-  // currently reports no intersection
-  return INFINITY;
-  // ----------- STUDENT CODE END ------------
+    // Vetor do ponto de origem do raio ao vértice do cone
+    vec3 O = ray.origin - apex;
+
+    // Vetor de direção do raio
+    vec3 D = ray.direction;
+
+    // Computar o ângulo ao quadrado
+    float cos2_theta = radius * radius / (radius * radius + len * len);
+
+    // Computar o vetor direção do cone
+    vec3 axis_dir = normalize(axis);
+
+    // Computar o vetor D' = D - (D dot axis_dir) * axis_dir
+    vec3 D_prime = D - dot(D, axis_dir) * axis_dir;
+
+    // Computar o vetor O' = O - (O dot axis_dir) * axis_dir
+    vec3 O_prime = O - dot(O, axis_dir) * axis_dir;
+
+    // Calcular as partes quadráticas da equação do cone
+    float A = dot(D_prime, D_prime) - cos2_theta * dot(D, axis_dir) * dot(D, axis_dir);
+    float B = 2.0 * (dot(D_prime, O_prime) - cos2_theta * dot(D, axis_dir) * dot(O, axis_dir));
+    float C = dot(O_prime, O_prime) - cos2_theta * dot(O, axis_dir) * dot(O, axis_dir);
+
+    // Resolver a equação quadrática
+    float discriminant = B * B - 4.0 * A * C;
+    if (discriminant < 0.0) {
+        return INFINITY; // Não há interseção com o cone
+    }
+
+    float t1 = (-B - sqrt(discriminant)) / (2.0 * A);
+    float t2 = (-B + sqrt(discriminant)) / (2.0 * A);
+
+    // Verificar se o ponto de interseção está dentro do cone
+    vec3 intersection_point = ray.origin + t1 * ray.direction;
+    vec3 AO = intersection_point - apex;
+    float dot_product = dot(AO, axis_dir);
+    if (dot_product < 0.0 || dot_product > len) {
+        return INFINITY; // Ponto de interseção está fora do cone
+    }
+
+    intersect.position = intersection_point;
+    intersect.normal = normalize(AO - dot_product * axis_dir);
+
+    return t1;
 }
 
 float findIntersectionWithCone(Ray ray, vec3 center, vec3 apex, float radius,
@@ -246,18 +450,22 @@ float findIntersectionWithCone(Ray ray, vec3 center, vec3 apex, float radius,
   return best_dist;
 }
 
-vec3 calculateSpecialDiffuseColor(Material mat, vec3 posIntersection,
-                                  vec3 normalVector) {
-  // ----------- STUDENT CODE BEGIN ------------
-  if (mat.special == CHECKERBOARD) {
-    // ----------- Our reference solution uses 7 lines of code.
-  } else if (mat.special == MYSPECIAL) {
-    // ----------- Our reference solution uses 5 lines of code.
-  }
+vec3 calculateSpecialDiffuseColor(Material mat, vec3 posIntersection, vec3 normalVector) {
+    if (mat.special == CHECKERBOARD) {
+        // Calcular uma textura de tabuleiro de xadrez
+        int check = int(mod(floor(posIntersection.x) + floor(posIntersection.z), 2.0));
+        if (check == 0) {
+            return vec3(0.0); // Cor preta
+        } else {
+            return vec3(1.0); // Cor branca
+        }
+    } else if (mat.special == MYSPECIAL) {
+        // Calcular a cor especial MYSPECIAL
+        return vec3(0.5, 0.5, 0.0); // Amarelo
+    }
 
-  // If not a special material, just return material color.
-  return mat.color;
-  // ----------- STUDENT CODE END ------------
+    // Se não for um material especial, retorne a cor do material
+    return mat.color;
 }
 
 vec3 calculateDiffuseColor(Material mat, vec3 posIntersection,
@@ -273,10 +481,16 @@ vec3 calculateDiffuseColor(Material mat, vec3 posIntersection,
 // lightVec is the vector from that position to that light -- it is not
 // normalized, so its length is the distance from the position to the light
 bool pointInShadow(vec3 pos, vec3 lightVec) {
-  // ----------- STUDENT CODE BEGIN ------------
-  // ----------- Our reference solution uses 15 lines of code.
-  return false;
-  // ----------- STUDENT CODE END ------------
+    // Direção do raio para a luz
+    Ray shadowRay;
+    shadowRay.origin = pos;
+    shadowRay.direction = normalize(lightVec);
+
+    // Trace o raio para verificar se ele atinge algum objeto no caminho para a luz
+    float shadowDist = rayIntersectScene(shadowRay, out Material tempMat, out Intersection tempIntersect);
+    
+    // Se a distância até a interseção for menor que a distância até a luz, a posição está na sombra
+    return shadowDist < length(lightVec);
 }
 
 // use random sampling to compute a ratio that represents the
@@ -284,10 +498,23 @@ bool pointInShadow(vec3 pos, vec3 lightVec) {
 // lightVec is the vector from that position to that light -- it is not
 // normalized, so its length is the distance from the position to the light
 float softShadowRatio(vec3 pos, vec3 lightVec) {
-  // ----------- STUDENT CODE BEGIN ------------
-  // ----------- Our reference solution uses 19 lines of code.
-  return 0.0;
-  // ----------- STUDENT CODE END ------------
+    float totalSamples = 0.0;
+    float shadowedSamples = 0.0;
+    
+    // Realize amostragem aleatória para calcular a razão de sombra suave
+    for (int i = 0; i < SOFT_SAMPLING; i++) {
+        // Gere uma posição de amostra aleatória dentro de uma área pequena em torno da posição
+        vec3 samplePos = pos + (normalize(lightVec) * (rand(float(i)) - 0.5));
+        
+        // Verifique se a posição de amostra está na sombra
+        if (pointInShadow(samplePos, lightVec)) {
+            shadowedSamples += 1.0;
+        }
+        totalSamples += 1.0;
+    }
+    
+    // Calcule a razão de sombra suave como a fração de amostras na sombra
+    return shadowedSamples / totalSamples;
 }
 
 vec3 getLightContribution(Light light, Material mat, vec3 posIntersection,
@@ -338,6 +565,9 @@ vec3 getLightContribution(Light light, Material mat, vec3 posIntersection,
       // Start with just black by default (i.e. no Phong term contribution)
       vec3 phongTerm = vec3(0.0, 0.0, 0.0);
       // ----------- STUDENT CODE BEGIN ------------
+      vec3 h = normalize(lightVector + eyeVector);
+      float specularIntensity = pow(max(0.0, dot(normalVector, h)), mat.shininess);
+      phongTerm = mat.specular * specularIntensity * light.color / attenuation;
       // ----------- Our reference solution uses 4 lines of code.
       // ----------- STUDENT CODE END ------------
       contribution += phongTerm;
@@ -362,6 +592,12 @@ vec3 calculateColor(Material mat, vec3 posIntersection, vec3 normalVector,
   // numLights (GLSL restriction), and accumulate each light's contribution
   // to the point of intersection in the scene.
   // ----------- STUDENT CODE BEGIN ------------
+  for (int i = 0; i < numLights; i++) {
+    // Get the contribution of the current light to the point of intersection
+    vec3 lightContribution = getLightContribution(lights[i], mat, posIntersection, normalVector, eyeVector, phongOnly, diffuseColor);
+    // Accumulate the contribution to the output color
+    outputColor += lightContribution;
+  }
   // ----------- Our reference solution uses 9 lines of code.
   // Return diffuseColor by default, so you can see something for now.
   return diffuseColor;
@@ -381,9 +617,12 @@ vec3 calcReflectionVector(Material material, vec3 direction, vec3 normalVector,
   // ----------- STUDENT CODE BEGIN ------------
   float eta =
       (isInsideObj) ? 1.0 / material.refractionRatio : material.refractionRatio;
-  // ----------- Our reference solution uses 5 lines of code.
-  // Return mirror direction by default, so you can see something for now.
-  return reflect(direction, normalVector);
+  vec3 refractDir = refract(direction, normalVector, eta);
+  // If the refraction is total internal reflection, return reflection
+  if (refractDir == vec3(0.0, 0.0, 0.0)) {
+    return reflect(direction, normalVector);
+  }
+  return refractDir;
   // ----------- STUDENT CODE END ------------
 }
 
@@ -415,8 +654,10 @@ vec3 traceRay(Ray ray) {
     // the loop and do not trace the ray any further.
     // (Hint: You should probably use EPS and INFINITY.)
     // ----------- STUDENT CODE BEGIN ------------
-    Material hitMaterial;
-    Intersection intersect;
+    float intersectionDistance = rayIntersectScene(ray, hitMaterial, intersect);
+    if (intersectionDistance == INFINITY || intersectionDistance <= EPS) {
+      break;
+    }
     // ----------- Our reference solution uses 4 lines of code.
     // ----------- STUDENT CODE END ------------
 
@@ -453,6 +694,10 @@ vec3 traceRay(Ray ray) {
     //     the accumulated color.
     // (2) Then break the for loop (i.e. do not trace the ray any further).
     // ----------- STUDENT CODE BEGIN ------------
+    if (hitMaterial.reflectivity == 0.0) {
+        resColor += resWeight * outputColor;
+        break;
+    }
     // ----------- Our reference solution uses 4 lines of code.
     // ----------- STUDENT CODE END ------------
 
@@ -468,6 +713,10 @@ vec3 traceRay(Ray ray) {
     // (4) Update the current weight using the material's reflectivity
     //     so that it is the appropriate weight for the next ray's color.
     // ----------- STUDENT CODE BEGIN ------------
+    ray.origin = posIntersection;
+    ray.direction = calcReflectionVector(hitMaterial, ray.direction, normalVector, isInsideObj);
+    resColor += resWeight * outputColor;
+    resWeight *= hitMaterial.reflectivity;
     // ----------- Our reference solution uses 8 lines of code.
     // ----------- STUDENT CODE END ------------
   }
