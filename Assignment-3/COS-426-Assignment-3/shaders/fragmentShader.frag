@@ -455,7 +455,6 @@ vec3 traceRay(Ray ray) {
     // ----------- STUDENT CODE BEGIN ------------
     // ----------- Our reference solution uses 4 lines of code.
     // ----------- STUDENT CODE END ------------
-
     // If the material is reflective or refractive...
     // (1) Use calcReflectionVector to compute the direction of the next
     //     bounce of this ray.

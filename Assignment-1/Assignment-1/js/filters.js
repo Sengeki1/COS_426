@@ -1037,6 +1037,15 @@ Filters.morphFilter = function(initialImg, finalImg, alpha, sampleMode, linesFil
     }
 
     // ----------- STUDENT CODE BEGIN ------------
+    // Function to apply homography transformation to a point
+    function applyHomography(x, y, homographyMatrix) {
+        const [a, b, c, d, e, f, g, h, i] = homographyMatrix
+        const denominator = g * x + h * y + i
+        const xNew = (a * x + b * y + c) / denominator
+        const yNew = (d * x + e * y + f) / denominator
+        return [xNew, yNew]
+    }
+
     var intersect_points = []
     // Calculating intersection point of two correspondance lines, each
     for (let i = 0; i < lines.initial.length; i++) {
@@ -1058,22 +1067,38 @@ Filters.morphFilter = function(initialImg, finalImg, alpha, sampleMode, linesFil
     }
 
     // Constructing Matrix A to find the homographic Matrix
-    var A = []
+    var A = [];
     for (let i = 0; i < intersect_points.length; i++) {
         var x0 = intersect_points[i].x;
         var y0 = intersect_points[i].y;
-        var x1 = intersect_points[(i + 1) % intersect_points.length].x; // Circular index
+        var x1 = intersect_points[(i + 1) % intersect_points.length].x;
         var y1 = intersect_points[(i + 1) % intersect_points.length].y;
-    
-        A.push([
-            -x0, -y0, -1, 0, 0, 0, x0 * x1, y0 * x1, x1,
-            0, 0, 0, -x0, -y0, -1, x0 * y1, y0 * y1, y1
-        ]);
+
+        A.push([-x0, -y0, -1, 0, 0, 0, x0 * x1, y0 * x1, x1]);
+        A.push([0, 0, 0, -x0, -y0, -1, x0 * y1, y0 * y1, y1]);
     }
-    // compute SVD to get the homographic Matrix
+
+    const svdResult = SVDJS.SVD(A)
+    const homographyMatrix = svdResult.v.slice(-1)[0];
+    
+    // Apply homography transformation to warp initialImg
+    const morphedImg = initialImg.createImg(initialImg.width, initialImg.height);
+    for (let x = 0; x < initialImg.width; x++) {
+        for (let y = 0; y < initialImg.height; y++) {
+            // Apply homography transformation to each pixel
+            const [xNew, yNew] = applyHomography(x, y, homographyMatrix);
+            // Interpolate between initialImg and finalImg using alpha
+            const pixelInitial = initialImg.getPixel(x, y);
+            const pixelFinal = finalImg.getPixel(Math.round(xNew), Math.round(yNew));
+            const pixelMorphed = pixelInitial.multipliedBy(1 - alpha).plus(pixelFinal.multipliedBy(alpha));
+
+            morphedImg.setPixel(x, y, pixelMorphed);
+        }
+    }
+    
     // ----------- STUDENT CODE END ------------
     //Gui.alertOnce ('morphFilter is not implemented yet');
-    return image;
+    return morphedImg;
 };
 
 // Use k-means to extract a pallete from an image
