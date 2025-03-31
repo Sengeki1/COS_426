@@ -1,7 +1,7 @@
-# Computer Graphics Assignment
+# Computer Graphics Assignments
 
 ## Overview
-This repository contains my Computer Graphics assignment, which includes two main components:
+This repository contains my Computer Graphics assignments, which includes two main components:
 
 1. **Paint Application** - A simple painting tool that allows users to create digital drawings.
 2. **Image Processing** - Various image manipulation techniques applied to enhance and modify images.
